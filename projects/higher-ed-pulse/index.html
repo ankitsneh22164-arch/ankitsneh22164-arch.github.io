@@ -1,0 +1,1371 @@
+<!DOCTYPE html><script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Higher Ed News Tracker",
+  "schemaVersion": 1,
+  "description": "Higher Ed Pulse — daily international education intelligence for C-suite: Why Today Matters, 24-hour AI synthesis, executive priorities, number of the day, company watch with people moves, tenders, and regulatory deadlines. 5 tabs, clickable signal bar, 7-day rolling news feed."
+}
+</script>
+<!--
+════════════════════════════════════════════════════════════════════════════
+OPERATING GUIDELINES — read this before running a daily/weekly update.
+This is the single reference for "what are we looking for and why." Prior
+sessions left the reasoning scattered across dated NOTE comments below (still
+worth reading for precedent/examples) — this block is the standing rule set
+those notes were applying. If you edit the rules below, edit the rule, not
+just that day's note.
+
+PURPOSE & AUDIENCE
+This dashboard briefs C-suite / executive readers at organizations exposed to
+international student mobility (universities, ed-tech, pathway/recruitment
+companies, investors). The bar for inclusion anywhere in this file is: "would
+this change what an executive does this week, or what they budget/staff for
+this quarter?" Background context that a specialist would already know is not
+news; a policy, funding, enrollment, or competitive shift that changes a
+decision is.
+
+TABS & WHAT EACH ONE IS FOR
+- Intelligence Feed (NEWS array): the core 7-day rolling feed. Every item
+  needs cat/impact/region/trend/tier/source/url and an executive "insight" +
+  "action" — not just a summary. This is analysis-for-decisions, not a
+  clipping service.
+- Company Watch (CO_STATUS / market signals): financial health and stock/
+  enrollment signals for tracked companies, PLUS company-specific news —
+  leadership hires/departures, layoffs, M&A, and anything else specific to a
+  named company — each with its own asOf date. See Daily Update Checklist.
+- Tenders & Deadlines (TENDERS + WATCHLIST): open procurement opportunities in
+  recruitment, marketing, and admissions services ONLY — not general IT,
+  facilities, or academic-staff recruitment — followed by the regulatory/
+  publication deadlines worth tracking (WATCHLIST, which ages out as dates pass).
+  See Zero Fabrication Policy below; the tender list has previously contained
+  fabricated/stale data and needs the most scrutiny. NOTE: the static conference
+  calendar (old EVENTS array) and the static "Key Reports & Data" and India IBC
+  tracker were removed by design — anything kept here must roll with the 7-day
+  window or be a live, dated deadline, not a fixed reference list.
+- India (isIndia lens): auto-filtered India-relevant NEWS + india-flagged SIGNALS
+  tiles + a "new since last briefing" lead. Fully derived from rolling data — no
+  standalone static array to maintain.
+- People Moves / Reports Published: CXO-level moves and major report drops,
+  also 7-day rolling like NEWS.
+
+CATEGORY TAXONOMY (CAT)
+policy (Policy & Visa), admissions, studyabroad, scholarships, rankings,
+workrights (Post-Study Work), tuition, testing (Language Testing),
+partnerships, tech, innovation. Use the closest fit — don't invent new
+categories without adding them to the CAT dict.
+
+IMPACT LEVELS (high / med / low)
+high = changes a visa/enrollment/revenue outcome for a whole country or
+segment (e.g. a visa rule with a hard effective date, a fee change that
+shifts destination choice). med = meaningful for a specific institution type,
+region, or channel but not sector-wide. low = worth logging for pattern-
+tracking but wouldn't on its own change a reader's plan this week. When in
+doubt, impact should track the "would this change what an exec does" bar
+above, not how much press coverage a story got.
+
+TIME WINDOWS
+- NEWS, People Moves, Reports Published: 7-day rolling — kept at 7 days
+  deliberately, not just as a display limit: it's the comparison window for
+  seeing how a story is evolving day to day (e.g. a policy story that gets a
+  new development 3 days later should still be visible next to the original).
+  Purge items once they age out, every run — don't just stop adding, actively
+  remove. (A FLOOR filter now enforces this at render time too: any story older
+  than TODAY_LABEL − 7 days is auto-hidden from every view and count even if not
+  purged — a safety net, not a substitute. Still purge the NEWS array each run so
+  it doesn't grow unbounded; FLOOR just guarantees nothing stale can ever
+  display. See the FLOOR const near TODAY_LABEL.) NOTE ON LINKS: every NEWS item
+  carries a stable `id` slug (e.g. id:'opt-100k'), and ALL click-throughs
+  (jumpToStory, Executive Priorities, Top Stories, India tab) target that id —
+  never the array position. So you can reorder or purge the NEWS array freely
+  without recomputing any indices or touching the Exec-Priorities links; just
+  keep each new story's id unique and reference it by slug. This replaced the
+  old array-index scheme that silently broke links on every reshuffle. ANCHOR THE WINDOW EXPLICITLY EVERY RUN, not as a vague "last 7
+  days": state the actual floor date in the run's audit note (e.g. "today is
+  Jul 26 → floor is Jul 19, remove anything dated before that") so there's no
+  ambiguity about inclusive/exclusive boundaries or which timezone's "today"
+  applies. Use the person's stated reference day/timezone if given (e.g.
+  IST); otherwise any single consistent timezone is fine as long as it's
+  named in the note.
+- Market State Signals: THIS IS NOT A FIXED SET OF NAMED TOPICS. Earlier
+  versions of this guideline (and the dashboard itself) treated the 7 tiles
+  as permanent slots — US Enrollment, Policy Climate, Scholarship Funding,
+  Canada Permits, UK Grad Route, TOEFL, Alt Destinations — each needing its
+  own independent real-world update to stay fresh. That model is wrong and
+  was corrected Jul 25, 2026 (see NOTE below): some topics (TOEFL's test
+  format, a "6/7 nations" policy count) simply don't get new reporting every
+  week — there is nothing to find, no matter how hard you search — so a
+  fixed slot for them either sits stale indefinitely or gets propped up with
+  a tangential citation just to bump the date, which is fabricating
+  freshness, not reporting it.
+  The correct model: every run, populate the 7 tiles FROM whatever is
+  actually in the last 7 days of the NEWS feed — pull the standout
+  quantifiable stat out of that week's top stories (a %, a $, a date, a
+  count), the same way Number of the Day already does for a single figure.
+  A topic with fresh news this week gets a tile; a topic without fresh news
+  drops out — it can come back the next time there's real news about it.
+  This makes 7-day freshness automatic instead of something to chase: you
+  are not verifying that TOEFL is still 85 minutes, you are asking "what are
+  the 7 most decision-relevant numbers to come out of this week's stories,"
+  which is a different and answerable question every single run.
+  STALE_DAYS (currently 7) still exists as a safety net for a tile that
+  didn't get rotated out when it should have been — not as a target to
+  defend by searching harder for a fixed topic.
+- Tenders: no fixed window — an item stays listed only as long as it is
+  verified still open (see Zero Fabrication Policy). Check known open items
+  every run; don't assume a deadline still holds without re-fetching.
+- Disruption Alert: not time-windowed at all — set active:true ONLY for a
+  genuine market-breaking event, not routine policy news. If nothing
+  qualifies, leave it inactive; don't manufacture urgency to fill the tile.
+  MUST BE ACTIVELY RE-EVALUATED EVERY RUN, not just left running once set —
+  it was found on Jul 27, 2026 sitting untouched with no asOf field at all,
+  the same "checked once, then ignored for a week" failure pattern already
+  caught on Market State Signals. Every run: (1) confirm the underlying
+  event is still the single most disruptive live item — if something newer
+  and bigger has broken, swap it in; (2) if the original disruption has
+  fully transitioned to "known, being managed" (already covered in NEWS/
+  Signals/Number of the Day for many days with no new development), retire
+  it — active:false — rather than let a week-old event keep occupying the
+  one banner reserved for something urgent; (3) if it's kept active because
+  it's still genuinely the top disruption, recompute any time-relative
+  language in verdict (e.g. "roughly N weeks") against today's actual date,
+  and update the asOf field.
+
+DAILY UPDATE CHECKLIST — what "run the daily update" means per component
+- Signal bar / Market State Signals: re-derive from today's actual news, not
+  carried forward by default. For each of the 7 signals, ask "did anything in
+  today's search touch this metric?" If yes, update value/sub/asOf and note
+  the source in the audit trail. If genuinely nothing moved it, leave the
+  asOf date as-is (don't fake a refresh) but still record in the NOTE that it
+  was checked.
+- Why Today Matters: regenerate this section's synthesis each run from that
+  day's actual top story or stories — it should read differently on a day
+  with a major policy shift than on a quiet day. Don't let it go stale while
+  the feed below it moves. IMPORTANT TECHNICAL NOTE: this section (and
+  Executive Priorities, and Number of the Day) is hardcoded prose in
+  renderOverview() — it does NOT recompute automatically the way Top Stories
+  does (that one correctly re-derives from DELTA_BRIEFING every render). If
+  you only edit the NEWS array and don't separately rewrite this prose, it
+  will silently go stale even while the rest of the dashboard looks current
+  — this exact gap was caught and fixed on Jul 25, 2026 (see NOTE below).
+  Rewriting it is a manual step every run, not optional. ALSO CHECK: the
+  Why Today Matters HEADER LABEL carries its own hardcoded date (separate
+  from the body text below it) — updating the prose without updating this
+  label leaves a stale date sitting right next to fresh-looking content,
+  which reads as worse than not updating at all. Grep for "why-today-label"
+  and confirm the date matches today's cutoff every run.
+- DELTA_BRIEFING SEQUENCING (caught Jul 27, 2026 — a real bug, not just a
+  display glitch): DELTA_BRIEFING must NOT be advanced to today's date in
+  the same run that adds a story dated today — the "new since last
+  briefing" filter is strictly date > DELTA_BRIEFING, so a same-day story
+  compared against a same-day cutoff fails the check and silently falls
+  back to "Nothing new," even though the reader seeing this file right now
+  has never seen that story. Advance DELTA_BRIEFING to reflect what the
+  reader has ALREADY been shown in a PRIOR delivery — i.e. only move it
+  forward to cover a story once that story has already appeared as "new"
+  in a run the person has seen, never in the same run you add it.
+- Top stories / "Nothing new": most days will only produce one or two
+  genuinely new stories — that's expected, not a shortfall. Lead with those;
+  if a run truly finds nothing new (as documented in some prior daily-run
+  notes), say so explicitly rather than padding the section.
+- Executive Priorities: derive directly from today's top story/stories, not
+  a static list — priorities should shift as the story mix shifts.
+- Number of the Day: pull from whatever stat is most decision-relevant in
+  today's actual updates, not a recycled figure from a previous run.
+- Industry Trends / Company Watch: two distinct things to check each run —
+  (1) sector-wide developments (funding shifts, enrollment trends, M&A
+  climate) and (2) company-specific news for tracked companies, explicitly
+  including leadership/hiring/firing moves, not just financial results.
+  A company with no news is not the same as a company that hasn't been
+  checked — say which in the audit note.
+  SNAPSHOT (Industry Snapshot tiles) follows the SAME rotating-tile model as
+  Market State Signals above, not a fixed set of named slots — corrected
+  Jul 27, 2026 after a prior version hardcoded three permanent keys
+  (idp/distress/ma), which is exactly the anti-pattern this file already
+  warns against for Signals: "Industry Distress: 0" and "M&A Activity: 0"
+  sat there indefinitely because the slot existed regardless of whether
+  there was anything real to report. SNAPSHOT is now an array; only add a
+  tile when a real, dated, verified fact backs it (a stock move, a
+  workforce change, a funding round, a genuine distress or M&A signal) —
+  a quiet week means fewer tiles, not padded ones. Don't recreate a fixed
+  "distress" or "M&A" slot just to have three tiles.
+- Tenders: search for newly declared RFPs/tenders (see Tender Search Scope &
+  Cadence and the Zero Fabrication Policy) — this is a discovery task each
+  run, not just a re-check of already-listed items.
+- Events: lower-maintenance by design — check for schedule changes or newly
+  announced conferences, but no daily re-derivation needed the way the
+  sections above require.
+
+ZERO FABRICATION POLICY (referenced throughout the NOTE comments below —
+this is the rule those notes are enforcing)
+1. Never add a tender, deadline, dollar/currency figure, or "confirmed" fact
+   without independently verifying it against a live, direct-fetched source.
+   A user-supplied claim, a search snippet, or an aggregator's framing is a
+   lead, not a source — fetch the primary notice/page yourself.
+2. If the live page can't be fetched or rendered (e.g. JS-only pages that
+   return no usable content), the item is UNCONFIRMED and stays out — do not
+   fill the gap with a plausible-sounding value.
+3. Never carry a figure or deadline forward from a previous run without
+   re-checking it if the run touches that item — dashboards have previously
+   shown fabricated or stale deadlines (see Jul 23 audit notes below) that
+   only direct re-fetching caught.
+4. If a source is closed, awarded, or superseded, remove it — don't leave
+   stale "open" opportunities in the feed.
+5. When you can't verify something, say so in the audit trail (see below)
+   rather than silently omitting it — the reasoning is part of the record.
+
+TENDER SEARCH SCOPE & CADENCE
+See the TENDER-ROTATION-CURSOR comment block further down for the live tier
+list and rotation cursor. Summary: Tier 1 countries are searched every run;
+Tier 2 and Tier 3 are large country lists split into rotating sub-groups so
+the full list gets covered over several runs without repeating the same
+search every day. Advance the cursor every run regardless of whether
+anything qualified — a null result is still progress through the rotation.
+
+SEARCH CADENCE PROTOCOL (added Aug 2, 2026 — the fix for "67 sources, still missing news")
+The failure mode this replaces: scanning all ~67 sources uniformly every run. That gives
+a source publishing several times a day (PIE, ICEF) the same single glance as one that
+publishes once a year (HESA), so the fast sources get under-read and the slow ones burn
+the budget re-confirming "nothing new." Tier by publish-cadence x strategic weight instead.
+India sources are Tier A regardless of raw cadence because they are load-bearing for who the
+client actually is. Rotating a source OUT for the week/month is not the same as dropping it —
+it means it isn't due this run; Tier A + whichever B/C group the cursor points at is the run's
+actual scan set.
+
+TIER A — every single run, no rotation:
+  USCIS, IRCC (Canada), The PIE News, ICEF Monitor,
+  + India: UGC notifications, AICTE, Times of India Education, Careers360, Shiksha,
+    Hindustan Times Education.
+TIER B — weekly; 3 rotating groups, one per week, ~3-week full cycle:
+  B1: Times Higher Ed, Inside Higher Ed, GOV.UK/UKVI (UK Home Office), Business Standard Education
+  B2: University World News, Higher Ed Dive, Home Affairs (AU), The Hindu Education
+  B3: Chronicle of HE, StudyTravel Network, US State Dept, Reuters/Bloomberg/FT Education
+TIER C — monthly; 3 rotating groups, one per month, ~3-month full cycle:
+  C1: HESA, NCES/IPEDS, Statistics Canada
+  C2: OECD Education at a Glance, UNESCO Stats, IIE Open Doors data
+  C3: Big-4/MBB advisory (McKinsey, EY-Parthenon, BCG, Bain, KPMG, L.E.K., Strategy&),
+      HolonIQ, WES/WENR, ranking bodies (QS, Shanghai, US News), sector associations
+      (NAFSA, ACE, AACSB, NACAC, AACRAO, EAIE, UUKi, Universities Australia/Canada, HEPI)
+EVENT-TRIGGERED — outside rotation entirely, checked when the calendar date is near
+  regardless of whose turn it is: national budget days, known ranking-release dates,
+  IIE Open Doors annual (Nov), HESA annual release, major intake-window starts.
+LIVE ROTATION CURSOR — advance EVERY run; a null result still counts as progress through
+  the rotation (same discipline as the tender cursor). Update this line each run:
+  >>> Week of Aug 2, 2026 → Tier B group: B1 · Tier C group: C1 <<<
+  Next weekly run → B2, then B3, then back to B1. Next monthly turn → C2, then C3, then C1.
+
+AUDIT TRAIL CONVENTION
+Every run should leave a dated // NOTE (<date>, <what>): ... comment (see
+examples below) stating what was searched, what was added/removed and why,
+and what was checked but rejected and why — especially rejections under the
+Zero Fabrication Policy. Future sessions rely on these notes as precedent;
+write them for that reader, not just as a changelog.
+════════════════════════════════════════════════════════════════════════════
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Higher Ed Pulse</title>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f0;color:#1a1a1a;font-size:13px;line-height:1.5;}
+
+/* MASTHEAD */
+.masthead{background:#0a0e1a;color:#fff;padding:0 20px;}
+.masthead-top{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e2a45;}
+.masthead-title{font-size:1rem;font-weight:800;letter-spacing:-.01em;}
+.masthead-title span{color:#f0a500;}
+.masthead-meta{font-size:.75rem;color:#8899bb;display:flex;align-items:center;gap:16px;}
+.live-dot{display:inline-block;width:7px;height:7px;background:#22c55e;border-radius:50%;margin-right:4px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* SIGNAL BAR */
+.signal-bar{background:#0a0e1a;padding:7px 20px 9px;display:flex;gap:0;}
+.signal{flex:1 1 0;border-right:1px solid #1e2a45;padding:0 12px;min-width:0;}
+.signal:last-child{border-right:none;}
+.signal-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;color:#6677aa;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.signal-value{font-size:.95rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+.signal-value.neg{color:#ef4444;}
+.signal-value.pos{color:#22c55e;}
+.signal-value.warn{color:#f59e0b;}
+.signal-value.neu{color:#94a3b8;}
+.signal-sub{font-size:.6rem;color:#6677aa;margin-top:2px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.signal-asof{font-size:.55rem;color:#3d4d70;margin-top:2px;}
+.signal-stale{font-size:.56rem;color:#f59e0b;font-weight:700;margin-top:2px;}
+
+/* LAYOUT */
+.page{display:grid;grid-template-columns:1fr;min-height:calc(100vh - 82px);}
+.leftnav{display:none;}
+.rightpanel{display:none;}
+.page.layout-filters{grid-template-columns:190px 1fr;}
+.page.layout-filters .leftnav{display:block;}
+.page.layout-rail{grid-template-columns:1fr 230px;}
+.page.layout-rail .rightpanel{display:block;}
+/* Constrain content width uniformly across ALL tabs (including Daily Feed) so the reading column is the same everywhere, not just on tabs without the left nav */
+.feed{max-width:960px;margin:0 auto;width:100%;}
+
+/* LEFT NAV */
+.leftnav{background:#fff;border-right:1px solid #e0ddd8;padding:12px 0;overflow-y:auto;}
+.nav-head{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#9ca3af;padding:8px 14px 3px;}
+.nav-btn{display:block;width:100%;text-align:left;padding:6px 14px;border:none;background:none;font-size:.75rem;color:#374151;cursor:pointer;transition:all .1s;border-left:3px solid transparent;white-space:nowrap;}
+.nav-btn:hover{background:#f9f8f5;color:#1a1a1a;}
+.nav-btn.active{background:#fef9f0;color:#b45309;border-left-color:#f0a500;font-weight:700;}
+.nav-divider{height:1px;background:#f0ede8;margin:6px 0;}
+.nav-count{float:right;font-size:.65rem;background:#f3f4f6;padding:1px 5px;border-radius:10px;color:#6b7280;font-weight:600;}
+.nav-btn.active .nav-count{background:#fde68a;color:#92400e;}
+.search-wrap{padding:10px 12px 6px;}
+.search-inp{width:100%;padding:6px 10px;border:1px solid #e0ddd8;border-radius:4px;font-size:.75rem;outline:none;}
+.search-inp:focus{border-color:#f0a500;}
+
+/* TABS */
+.tab-bar{display:flex;border-bottom:2px solid #e0ddd8;background:#fff;position:sticky;top:0;z-index:10;overflow-x:auto;}
+.tab{padding:9px 16px;border:none;background:none;font-size:.75rem;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;}
+.tab:hover{color:#1a1a1a;}
+.tab.active{color:#b45309;border-bottom-color:#f0a500;}
+.tab .tc{display:inline-block;font-size:.65rem;background:#f3f4f6;padding:1px 5px;border-radius:10px;margin-left:4px;color:#6b7280;}
+.tab.active .tc{background:#fde68a;color:#92400e;}
+
+/* FEED */
+.feed{background:#f4f4f0;}
+.feed-header{padding:8px 16px;border-bottom:1px solid #e0ddd8;display:flex;align-items:center;justify-content:space-between;background:#fff;}
+.feed-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;}
+.feed-count{font-size:.65rem;color:#9ca3af;}
+.tl-date{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#9ca3af;padding:8px 16px 5px;background:#f9f8f5;border-bottom:1px solid #ede9e4;border-top:1px solid #ede9e4;display:flex;align-items:center;gap:8px;}
+.tl-date::after{content:'';flex:1;height:1px;background:#e0ddd8;}
+
+/* STORY CARD */
+.story{padding:13px 16px;border-bottom:1px solid #ede9e4;background:#fff;transition:background .1s;animation:si .25s ease both;}
+.story:hover{background:#fefdf9;}
+@keyframes si{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.story.high{border-left:3px solid #dc2626;}
+.story.med{border-left:3px solid #f59e0b;}
+.story.low{border-left:3px solid #16a34a;}
+.story.opportunity{border-left:3px solid #16a34a;background:#f8fffe;}
+.story-flash{animation:flashHi 1.6s ease;}
+@keyframes flashHi{0%{background:#fff3cd;}100%{background:inherit;}}
+.opp-badge{display:inline-block;background:#dcfce7;color:#15803d;font-size:.58rem;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;text-transform:uppercase;letter-spacing:.05em;}
+.insight-block.opp-insight{background:#f0fdf4;border-left-color:#16a34a;}
+.insight-block.opp-insight .ins-label{color:#15803d;}
+.action.opp-action-tag{color:#15803d;background:#dcfce7;}
+.story-meta{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+.impact-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-high{background:#dc2626;}.dot-med{background:#f59e0b;}.dot-low{background:#16a34a;}
+.cat-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;}
+.region-tag{font-size:.65rem;font-weight:600;color:#9ca3af;background:#f3f4f6;padding:1px 6px;border-radius:3px;}
+.trend-tag{font-size:.65rem;font-weight:700;}
+.tr-down{color:#dc2626;}.tr-up{color:#16a34a;}.tr-flat{color:#9ca3af;}
+.tier-tag{font-size:.58rem;color:#9ca3af;margin-left:auto;font-weight:500;}
+.story h3{font-size:.85rem;font-weight:700;line-height:1.4;color:#111;margin-bottom:5px;font-family:Georgia,serif;}
+.story .sum{font-size:.75rem;color:#374151;line-height:1.6;margin-bottom:8px;}
+.insight-block{background:#fffcf5;border-left:3px solid #f0a500;padding:9px 12px;margin-bottom:8px;border-radius:0 4px 4px 0;}
+.insight-block .ins-label{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#b45309;margin-bottom:3px;}
+.insight-block p{font-size:.75rem;color:#374151;line-height:1.55;}
+.insight-block .action{font-size:.75rem;font-weight:700;color:#92400e;margin-top:6px;padding:5px 8px;background:#fef3c7;border-radius:3px;display:block;}
+
+/* EXEC SUMMARY */
+.exec-take{background:#0a0e1a;color:#fff;padding:10px 16px;border-bottom:2px solid #f0a500;display:flex;gap:10px;align-items:flex-start;}
+.exec-take-label{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#f0a500;white-space:nowrap;padding-top:2px;flex-shrink:0;}
+.exec-take-text{font-size:.75rem;color:#e2e8f0;line-height:1.5;}
+
+/* SOURCE BADGE */
+.src-badge{font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:3px;vertical-align:middle;}
+.sb-gov{background:#dcfce7;color:#15803d;}
+.sb-trade{background:#dbeafe;color:#1d4ed8;}
+.sb-media{background:#fef9c3;color:#92400e;}
+
+/* Watch-list styles removed Jul 24 cleanup — watchlist renders via .watch-card */
+
+.tog-btn{background:none;border:none;font-size:.75rem;color:#b45309;cursor:pointer;font-weight:600;padding:0;display:flex;align-items:center;gap:4px;margin-bottom:7px;}
+.tog-btn .arr{font-size:.58rem;transition:transform .15s;}
+.tog-btn.open .arr{transform:rotate(90deg);}
+.hidden{display:none;}
+.story-footer{display:flex;align-items:center;justify-content:space-between;}
+.story-src{font-size:.65rem;color:#9ca3af;}
+.story-src strong{color:#6b7280;font-weight:600;}
+.read-link{font-size:.65rem;color:#0369a1;text-decoration:none;font-weight:600;}
+.read-link:hover{text-decoration:underline;}
+
+/* TENDER CARD */
+.tender{padding:12px 16px;border-bottom:1px solid #ede9e4;background:#fff;border-left:3px solid #6366f1;animation:si .25s ease both;}
+.tender:hover{background:#fafaf8;}
+.tender-meta{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+.tender-type{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6366f1;background:#ede9fe;padding:2px 7px;border-radius:3px;}
+.tender-region{font-size:.65rem;background:#f3f4f6;color:#6b7280;padding:1px 6px;border-radius:3px;font-weight:600;}
+.deadline-badge{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:auto;}
+.dl-red{background:#fee2e2;color:#dc2626;}
+.dl-amber{background:#fef3c7;color:#d97706;}
+.dl-green{background:#dcfce7;color:#16a34a;}
+.tender h3{font-size:.85rem;font-weight:700;color:#111;margin-bottom:4px;font-family:Georgia,serif;}
+.tender .issuer{font-size:.75rem;color:#374151;margin-bottom:4px;}
+.tender .tdesc{font-size:.75rem;color:#6b7280;line-height:1.5;margin-bottom:8px;}
+.tender-footer{display:flex;align-items:center;justify-content:space-between;}
+.tender-val{font-size:.75rem;color:#6b7280;font-weight:600;}
+.tender-link{font-size:.65rem;color:#6366f1;text-decoration:none;font-weight:700;}
+.tender-link:hover{text-decoration:underline;}
+
+/* OPPORTUNITY READ (tender interpretation layer) */
+.opp-read{background:#f5f3ff;border-left:3px solid #6366f1;border-radius:0 4px 4px 0;padding:8px 11px;margin-bottom:8px;}
+.opp-read-head{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#4f46e5;margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.opp-assess{font-size:.55rem;font-weight:600;color:#a5a3c9;text-transform:none;letter-spacing:0;}
+.priority-badge{font-size:.55rem;font-weight:800;padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em;}
+.pr-high{background:#fee2e2;color:#dc2626;}
+.pr-med{background:#fef3c7;color:#d97706;}
+.pr-low{background:#e5e7eb;color:#6b7280;}
+.opp-row{display:flex;gap:8px;font-size:.7rem;line-height:1.5;margin-bottom:2px;}
+.opp-k{flex:0 0 128px;color:#6b7280;font-weight:700;}
+.opp-v{flex:1;color:#374151;}
+.opp-why{font-size:.72rem;color:#4c1d95;line-height:1.5;margin-top:5px;padding-top:5px;border-top:1px solid #e9e5ff;}
+@media(max-width:780px){.opp-k{flex-basis:96px;}}
+
+/* WATCH CARD (shared meta/date-badge styles) */
+.event-meta{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+.event-type{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0369a1;background:#e0f2fe;padding:2px 7px;border-radius:3px;}
+.edesc{font-size:.75rem;color:#374151;line-height:1.5;margin-bottom:7px;}
+.days-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:3px;}
+.days-past{background:#f3f4f6;color:#6b7280;}
+.days-soon{background:#fee2e2;color:#dc2626;}
+.days-coming{background:#fef3c7;color:#d97706;}
+.days-upcoming{background:#dcfce7;color:#16a34a;}
+
+/* WATCHLIST CARD */
+.watch-card{padding:12px 16px;border-bottom:1px solid #ede9e4;background:#fff;border-left:3px solid #7c3aed;animation:si .25s ease both;cursor:pointer;}
+.watch-card:hover{background:#fafaf8;}
+.watch-type{color:#7c3aed;background:#f3e8ff;}
+
+.src-group{margin-bottom:10px;}
+.src-group-head{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#b45309;margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid #fde68a;}
+.src-link{display:block;font-size:.75rem;color:#374151;text-decoration:none;padding:3px 0;border-bottom:1px solid #f5f3f0;transition:color .1s;}
+.src-link:hover{color:#b45309;}
+.src-link:last-child{border-bottom:none;}
+.src-tier{float:right;font-size:.58rem;color:#9ca3af;}
+
+/* RIGHT PANEL (contextual per-tab rail) — style matches the app's own tokens */
+.rightpanel{background:#f9f8f5;border-left:1px solid #e0ddd8;overflow-y:auto;}
+.rp-section{border-bottom:1px solid #e0ddd8;padding:12px 14px;}
+.rp-head{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:#9ca3af;margin-bottom:9px;}
+.watch-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid #f0ede8;cursor:pointer;}
+.watch-item:last-child{border-bottom:none;}
+.watch-item:hover .watch-text{color:#b45309;}
+.watch-dot{width:6px;height:6px;border-radius:50%;background:#f0a500;flex-shrink:0;margin-top:4px;}
+.watch-text{font-size:.71rem;color:#374151;line-height:1.4;}
+.watch-when{font-size:.62rem;color:#9ca3af;display:block;margin-top:1px;}
+.signal-mini{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid #f0ede8;}
+.signal-mini:last-child{border-bottom:none;}
+.sm-label{font-size:.71rem;color:#374151;}
+.sm-val{font-size:.71rem;font-weight:700;}
+.sm-val.neg{color:#dc2626;}.sm-val.pos{color:#16a34a;}.sm-val.warn{color:#d97706;}
+
+/* INDIA TAB — source-market lens + IBC (foreign-campus) tracker */
+.india-stat{display:flex;gap:10px;flex-wrap:wrap;padding:10px 16px 4px;}
+.india-stat .is-card{border-left-color:#f0a500;}
+.is-card.is-click{cursor:pointer;transition:box-shadow .12s,transform .12s;}
+.is-card.is-click:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);transform:translateY(-1px);}
+.is-card.is-click:hover .is-label{text-decoration:underline;}
+.india-lead{margin:14px 16px 0;background:#fff;border:1px solid #e0ddd8;border-left:3px solid #dc2626;border-radius:0 6px 6px 0;padding:11px 14px;}
+.india-lead.quiet{border-left-color:#16a34a;}
+.india-lead-h{font-size:.72rem;font-weight:800;color:#111;margin-bottom:6px;}
+.india-lead-item{padding:7px 0;border-top:1px solid #f0ede8;cursor:pointer;}
+.india-lead-item:first-of-type{border-top:none;}
+.india-lead-item b{font-size:.8rem;color:#111;}
+.il-meta{font-size:.64rem;color:#6b7280;margin-top:2px;}
+.il-quiet{font-size:.68rem;color:#4b5563;line-height:1.45;}
+.india-sub{font-size:.62rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:12px 16px 0;}
+.new-pill{display:inline-block;background:#dc2626;color:#fff;font-size:.54rem;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:6px;vertical-align:middle;letter-spacing:.04em;}
+
+/* INDUSTRY SNAPSHOT */
+.is-block{padding:10px 16px 4px;display:flex;gap:10px;flex-wrap:wrap;}
+.is-card{flex:1;min-width:150px;background:#fff;border:1px solid #e0ddd8;border-left:3px solid #dc2626;border-radius:5px;padding:8px 12px;}
+.is-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;}
+.is-value{font-size:1rem;font-weight:800;margin:2px 0;}
+.is-value.neg{color:#dc2626;}.is-value.pos{color:#16a34a;}.is-value.warn{color:#d97706;}
+.is-sub{font-size:.65rem;color:#9ca3af;}
+
+/* Industry-card styles removed Jul 24 cleanup — Industry Trend renders via .pm-* cards */
+
+.empty-msg{padding:32px 16px;text-align:center;color:#9ca3af;font-size:.85rem;}
+
+/* MARKET OVERVIEW */
+.ov-wrap{padding:14px 16px;display:flex;flex-direction:column;gap:14px;}
+.ts-block{background:#fff;border:1px solid #e0ddd8;border-radius:6px;padding:12px 14px;margin-bottom:12px;}
+.ts-head{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:#9ca3af;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e0ddd8;display:flex;justify-content:space-between;align-items:center;}
+.ts-viewall{font-size:.65rem;font-weight:700;color:#b45309;text-decoration:none;cursor:pointer;}
+.ts-viewall:hover{text-decoration:underline;}
+.ts-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f0ede8;cursor:pointer;}
+.ts-item:last-child{border-bottom:none;}
+.ts-item:hover .ts-title{color:#b45309;}
+.ts-dot{margin-top:5px;}
+.ts-title{font-size:.85rem;font-weight:700;color:#111;font-family:Georgia,serif;line-height:1.4;}
+.ts-meta{font-size:.65rem;color:#9ca3af;margin-top:2px;}
+.notd-bar{display:flex;align-items:center;gap:12px;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f0a500;padding:10px 14px;border-radius:5px;margin-bottom:12px;}
+.notd-label{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#92400e;white-space:nowrap;}
+.notd-number{font-size:1.3rem;font-weight:900;color:#b45309;white-space:nowrap;}
+.notd-desc{font-size:.75rem;color:#78350f;line-height:1.4;}
+.exec-priorities{background:#0a0e1a;border-radius:6px;padding:12px 16px;margin-bottom:12px;}
+.ep-head{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6677aa;margin-bottom:8px;}
+.ep-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.ep-item{display:flex;align-items:flex-start;gap:7px;padding:6px 10px;border-radius:4px;font-size:.75rem;}
+.ep-dot{font-size:.85rem;flex-shrink:0;line-height:1.4;}
+.ep-text{color:#e5e7eb;line-height:1.4;}
+.ep-critical{background:#1f0a0a;}
+.ep-high{background:#1a110a;}
+.ep-open{background:#0a1a0e;}
+.ep-info{background:#0a0e1a;border:1px solid #1e2a45;}
+
+
+/* CALENDAR VIEW */
+.cal-section{padding:10px 16px 6px;background:#f9f8f5;border-bottom:1px solid #e0ddd8;}
+.cal-section-head{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:#9ca3af;}
+
+/* SOURCES VIEW */
+.src-view-wrap{padding:14px 16px;display:grid;grid-template-columns:1fr;gap:20px;}
+.src-view-head{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:#b45309;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #fde68a;}
+.report-card{display:block;padding:9px 12px;border:1px solid #e0ddd8;border-radius:5px;margin-bottom:7px;text-decoration:none;background:#fff;transition:border-color .1s;}
+.report-card:hover{border-color:#f0a500;}
+.report-title{font-size:.75rem;font-weight:700;color:#111;margin-bottom:2px;}
+.report-meta{font-size:.65rem;color:#9ca3af;}
+
+@media(max-width:900px){.page,.page.layout-filters,.page.layout-rail,.page.layout-plain{grid-template-columns:1fr}.leftnav,.rightpanel{display:none!important}.src-view-wrap{grid-template-columns:1fr}.signal-bar{display:flex;overflow-x:auto;}.signal{flex-shrink:0;min-width:150px;border-right:1px solid #1e2a45;}}
+
+/* ── FEATURE: Why Today Banner ── */
+.why-today{background:linear-gradient(135deg,#1a3a5c,#0d2137);color:#fff;padding:12px 16px;border-radius:6px;margin-bottom:12px;border-left:4px solid #f0a500;}
+.why-today-label{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#f0a500;display:block;margin-bottom:4px;}
+.why-today-text{font-size:.75rem;line-height:1.55;color:#e2e8f0;}
+
+/* ── FEATURE: What Changed Since Yesterday ── */
+.delta-block{background:#0f2336;border:1px solid #1e3a5f;border-radius:6px;padding:12px 16px;margin-bottom:14px;}
+.delta-head{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#60a5fa;margin-bottom:8px;}
+.delta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+.delta-item{background:#0d1f35;border-radius:5px;padding:8px 10px;}
+.delta-label{font-size:.58rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;}
+.delta-val{font-size:1.3rem;font-weight:900;margin:2px 0;}
+.delta-val.pos{color:#22c55e;}
+.delta-val.neg{color:#ef4444;}
+.delta-val.warn{color:#f59e0b;}
+.delta-sub{font-size:.58rem;color:#6b7280;}
+.delta-movements{display:flex;gap:8px;flex-wrap:wrap;}
+.delta-move{font-size:.65rem;background:#0d1f35;border-radius:4px;padding:4px 8px;color:#94a3b8;}
+.delta-move.down{border-left:3px solid #ef4444;}
+.delta-move.up{border-left:3px solid #22c55e;}
+
+/* ── FEATURE: Clickable signals ── */
+.signal{cursor:pointer;transition:background .15s,transform .1s;}
+.signal:hover{background:rgba(240,165,0,.1)!important;transform:translateY(-1px);}
+
+/* ── FEATURE: New Today badges ── */
+.new-badge{display:inline-block;background:#f0a500;color:#000;font-size:.58rem;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;text-transform:uppercase;letter-spacing:.05em;animation:pulseSoft 2s ease infinite;}
+@keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:.7}}
+
+.preset-btn{display:inline-block;font-size:.65rem;font-weight:700;background:#f5f3f0;border:1px solid #d1cdc7;border-radius:3px;padding:3px 7px;cursor:pointer;margin:2px 2px 2px 0;color:#374151;transition:background .12s;user-select:none;}
+.preset-btn:hover{background:#fde68a;border-color:#f0a500;}
+
+.cw-status{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;}
+.cw-status.sc-r{background:#fee2e2;color:#dc2626;}
+.cw-status.sc-g{background:#dcfce7;color:#16a34a;}
+.cw-status.sc-a{background:#fef3c7;color:#d97706;}
+
+/* ── FEATURE: Industry outlook, disruption alert, impact chips, threads ── */
+.industry-block{background:#faf5ff;border-left:3px solid #7c3aed;padding:9px 12px;margin-bottom:8px;border-radius:0 4px 4px 0;}
+.industry-block .ind-label{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6d28d9;margin-bottom:4px;}
+.industry-block .ind-tag{font-size:.58rem;color:#a78bfa;font-weight:600;text-transform:none;letter-spacing:0;}
+.industry-block ul{padding-left:16px;margin:0;}
+.industry-block li{font-size:.75rem;color:#4c1d95;line-height:1.55;margin-bottom:3px;}
+.alert-strip{background:linear-gradient(90deg,#7f1d1d,#991b1b);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:3px solid #f0a500;}
+.alert-dot{width:9px;height:9px;background:#fbbf24;border-radius:50%;animation:pulse 1s infinite;flex-shrink:0;}
+.alert-label{font-size:.65rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#fbbf24;white-space:nowrap;}
+.alert-title{font-size:.85rem;font-weight:800;line-height:1.3;}
+.alert-verdict{font-size:.75rem;color:#fecaca;line-height:1.4;margin-top:1px;}
+.impact-chips{margin-top:7px;font-size:.65rem;color:#9ca3af;}
+.impact-chip{display:inline-block;font-size:.58rem;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:3px;padding:1px 7px;margin:2px 4px 0 0;cursor:pointer;transition:background .12s;}
+.impact-chip:hover{background:#fecaca;}
+.thread-badge{display:inline-block;font-size:.58rem;font-weight:700;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:3px;margin-left:5px;vertical-align:middle;}
+
+/* ── FEATURE: Update frequency badges ── */
+.freq-badge{display:inline-block;font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle;letter-spacing:.03em;text-transform:uppercase;}
+.freq-daily{background:#dcfce7;color:#16a34a;}
+
+/* ── FEATURE: People Moves (CXO tracker) ── */
+.pm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 16px;}
+.pm-card{background:#fff;border:1px solid #e0ddd8;border-radius:6px;padding:12px 14px;transition:border-color .12s,box-shadow .12s;animation:si .25s ease both;}
+.pm-card:hover{border-color:#f0a500;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+.pm-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.pm-name{font-size:.85rem;font-weight:800;color:#111;font-family:Georgia,serif;}
+.pm-move{font-size:.58rem;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;}
+.pm-appointed{background:#dcfce7;color:#15803d;}
+.pm-promoted{background:#dbeafe;color:#1d4ed8;}
+.pm-departed{background:#f3f4f6;color:#6b7280;}
+.pm-role{font-size:.75rem;color:#374151;font-weight:600;margin-bottom:2px;}
+.pm-co{font-size:.65rem;color:#b45309;font-weight:700;cursor:pointer;}
+.pm-co:hover{text-decoration:underline;}
+.pm-note{font-size:.65rem;color:#6b7280;line-height:1.5;margin-top:7px;border-top:1px solid #f0ede8;padding-top:6px;}
+.pm-date{font-size:.58rem;color:#9ca3af;margin-top:5px;}
+@media(max-width:780px){.pm-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<!-- MASTHEAD -->
+<div class="masthead">
+<div class="masthead-top">
+<div class="masthead-title">HIGHER ED <span>PULSE</span></div>
+<div class="masthead-meta">
+<span><span class="live-dot"></span>Rolling brief · new since your last check</span>
+<span id="data-asof">Cutoff 6 Aug 2026 · 08:00 IST / 02:30 UTC</span>
+<a href="#" onclick="setView('sources',null);return false;" style="color:#8899bb;text-decoration:none;border-bottom:1px dotted #6677aa;">67 sources · 11 categories →</a>
+</div>
+</div>
+<div class="signal-bar-head" id="signal-bar-head" style="padding:6px 20px 0;color:#6677aa;font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;">📊 Market State<span class="freq-badge freq-daily">🔄 Daily</span><span style="text-transform:none;letter-spacing:normal;margin-left:6px;color:#4a5a80;">— refreshed from this week's stories</span></div>
+<div class="signal-bar" id="signal-bar"></div>
+</div>
+
+<div class="page" id="page">
+
+<!-- LEFT NAV -->
+<nav class="leftnav">
+<div class="search-wrap">
+<input class="search-inp" type="text" placeholder="Search…" oninput="doSearch(this.value)"/>
+</div>
+<div class="nav-head">Category</div>
+<button class="nav-btn active" data-f="cat" data-v="all"         onclick="sf('cat','all',this)">All <span class="nav-count" id="nc-all"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="policy"      onclick="sf('cat','policy',this)">Policy & Visa <span class="nav-count" id="nc-policy"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="admissions"  onclick="sf('cat','admissions',this)">Admissions <span class="nav-count" id="nc-admissions"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="studyabroad" onclick="sf('cat','studyabroad',this)">Study Abroad <span class="nav-count" id="nc-studyabroad"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="scholarships"onclick="sf('cat','scholarships',this)">Scholarships <span class="nav-count" id="nc-scholarships"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="rankings"    onclick="sf('cat','rankings',this)">Rankings <span class="nav-count" id="nc-rankings"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="workrights"  onclick="sf('cat','workrights',this)">Post-Study Work <span class="nav-count" id="nc-workrights"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="tuition"     onclick="sf('cat','tuition',this)">Tuition & Cost <span class="nav-count" id="nc-tuition"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="testing"     onclick="sf('cat','testing',this)">Language Testing <span class="nav-count" id="nc-testing"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="partnerships"onclick="sf('cat','partnerships',this)">Partnerships <span class="nav-count" id="nc-partnerships"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="tech"        onclick="sf('cat','tech',this)">Tech &amp; AI <span class="nav-count" id="nc-tech"></span></button>
+<button class="nav-btn"        data-f="cat" data-v="innovation"  onclick="sf('cat','innovation',this)">Innovation Watch <span class="nav-count" id="nc-innovation"></span></button>
+<div class="nav-divider"></div>
+<div class="nav-head">Impact</div>
+<button class="nav-btn" data-f="impact" data-v="all"  onclick="sf('impact','all',this)">All <span class="nav-count" id="ni-all"></span></button>
+<button class="nav-btn" data-f="impact" data-v="high" onclick="sf('impact','high',this)">● High <span class="nav-count" id="ni-high"></span></button>
+<button class="nav-btn" data-f="impact" data-v="med"  onclick="sf('impact','med',this)">● Medium <span class="nav-count" id="ni-med"></span></button>
+<button class="nav-btn" data-f="impact" data-v="low"  onclick="sf('impact','low',this)">● Low <span class="nav-count" id="ni-low"></span></button>
+<div class="nav-divider"></div>
+<div class="nav-head">Region</div>
+<button class="nav-btn active" data-f="region" data-v="all"    onclick="sf('region','all',this)">Global</button>
+<button class="nav-btn"        data-f="region" data-v="US"     onclick="sf('region','US',this)">United States</button>
+<button class="nav-btn"        data-f="region" data-v="UK"     onclick="sf('region','UK',this)">United Kingdom</button>
+<button class="nav-btn"        data-f="region" data-v="AUS"    onclick="sf('region','AUS',this)">Australia</button>
+<button class="nav-btn"        data-f="region" data-v="CAN"    onclick="sf('region','CAN',this)">Canada</button>
+<button class="nav-btn"        data-f="region" data-v="Global" onclick="sf('region','Global',this)">Multi-region</button>
+<div class="nav-divider"></div>
+<div class="nav-head">Signal</div>
+<button class="nav-btn active" data-f="trend" data-v="all"  onclick="sf('trend','all',this)">All</button>
+<button class="nav-btn"        data-f="trend" data-v="up"   onclick="sf('trend','up',this)">📈 Opportunities</button>
+<button class="nav-btn"        data-f="trend" data-v="down" onclick="sf('trend','down',this)">📉 Risks</button>
+</nav>
+
+<!-- MAIN -->
+<main class="feed">
+<div class="tab-bar" id="tabBar">
+<button class="tab active" onclick="setView('overview',this)" data-view="overview">Today's Pulse</button>
+<button class="tab"        onclick="setView('news',this)" data-view="news">Daily Feed <span class="tc" id="tc-news"></span></button>
+<button class="tab"        onclick="setView('india',this)" data-view="india">India <span class="tc" id="tc-india"></span></button>
+<button class="tab"        onclick="setView('companies',this)" data-view="companies">Industry Trend <span class="tc" id="tc-industry"></span></button>
+<button class="tab"        onclick="setView('tenders',this)" data-view="tenders">Opportunities <span class="tc" id="tc-tenders"></span></button>
+</div>
+<div class="feed-header">
+<span class="feed-label" id="feed-label">Today's Pulse · Aug 2, 2026</span>
+<span class="feed-count" id="feed-count"></span>
+</div>
+<div id="feed"></div>
+</main>
+<aside class="rightpanel" id="rightpanel"></aside>
+</div>
+<script>
+const CAT={policy:'Policy & Visa',admissions:'Admissions',studyabroad:'Study Abroad',scholarships:'Scholarships',rankings:'Rankings',workrights:'Post-Study Work',tuition:'Tuition & Cost',testing:'Language Testing',partnerships:'Partnerships & MoUs',tech:'Tech & AI Adoption',innovation:'Innovation Watch'};
+const TREND={down:{cls:'tr-down',txt:'↓ Declining'},up:{cls:'tr-up',txt:'↑ Rising'},flat:{cls:'tr-flat',txt:'→ Stable'}};
+
+const NEWS=[
+  {date:'Jul 28, 2026',published:'Jul 9, 2026',cat:'admissions',impact:'high',region:'US',trend:'down',tier:'T1',source:'IIE / ICEF Monitor / Inside Higher Ed / Forbes',url:'https://monitor.icef.com/2026/07/decline-in-indian-demand-a-major-factor-in-softer-outlook-for-foreign-enrolment-in-us-higher-education-in-2026-27/',id:'iie-snapshot',title:'IIE Spring 2026 Snapshot: 59% of US Colleges Report Falling International Applications, India the Biggest Driver',summary:'IIE\'s twice-yearly Spring 2026 Snapshot (585 responding US institutions, hosting ~48% of all international students in the US, surveyed 5 May–11 June, released ~9 Jul) found 59% report a decline in international application volumes for 2026/27, with 63% expecting an overall enrollment decrease and nearly 1 in 4 expecting a "substantial decline." India is the standout driver: only 39% of institutions reported stable/increased applications from India specifically (per ICEF), and a separate IIE figure cited by The PIE put the India-specific application decline at 61% of institutions. 92% of those anticipating drops cited visa denials/delays; 80% cited US travel restrictions; 77% cited students choosing other destinations. On the positive side, 84% of institutions still call international recruitment a priority and most are holding or increasing recruitment budgets. Independently corroborated across ICEF Monitor, Forbes, and Inside Higher Ed, each citing the same underlying IIE report.',insight:'This is the clearest, most directly quantified evidence yet that the India-outbound slowdown specifically (not just a generic Big-Four decline) is the dominant driver of the 2026/27 US outlook — precisely the corridor this consultancy tracks. The 92%/80%/77% reasons ranking (visa friction > travel restrictions > destination-switching) gives a concrete order of priority for where counselling and positioning effort should go.',action:'Use the India-specific 61%/39% figures directly in client-facing India-outbound positioning for the US — and pair the "84% still prioritising recruitment, budgets holding" finding with proof points (documentation support, alternative-destination guidance) that address the top three cited barriers.',industry:['First-order: US-bound India pipelines should expect materially softer 2026/27 application volumes industry-wide, not an agency-specific issue.','Second-order: institutions holding recruitment budgets steady despite the decline signals continued willingness to pay for agencies/platforms that can still deliver qualified, visa-ready applicants.']},
+  {date:'Jul 28, 2026',published:'Jul 24, 2026',cat:'workrights',impact:'high',region:'CAN',trend:'down',tier:'T1',source:'LiveWire Calgary / CTV News / VisaVerge',url:'https://www.visaverge.com/f1visa/calgary-international-students-stage-hunger-strike-over-denied-pgwp-by-ircc/',id:'calgary-pgwp',title:'Calgary PGWP Refusals Escalate to Hunger Strike, ~1,500 Graduates Affected, Federal Court Cases Filed',summary:'The Calgary PGWP-refusal story (previously covered, then dropped from this feed on Jul 25 as it aged past the 7-day floor) has materially escalated: a group of affected international students began a hunger strike on 24 July 2026 over Post-Graduation Work Permit refusals. IRCC updated its PGWP eligibility webpage on 24 June 2026 to state that non-credit programmes do not qualify — which it describes as a clarification, not a new rule — but this is now being applied to roughly 1,500 graduates (up from the "hundreds" first reported in mid-July), many from a public-private college partnership in Alberta (Portage College / Canadian Institute of Osteopathic Therapy) and a large share from India, who enrolled in 2024 believing their non-credit programmes qualified. At least one graduate (Jaspinder Kaur, from Punjab) has filed for federal judicial review. Confirmed across LiveWire Calgary, CTV News, VisaVerge, and immigcanada.com, all independently corroborating the 24 June webpage-update date, the ~1,500 figure, and the 24 Jul hunger-strike start.',insight:'This converts what looked like a contained, page-13 compliance story into a live reputational and legal flashpoint for Canada\'s international-education brand — retroactive application of a webpage "clarification" to students who enrolled years earlier, disproportionately affecting Indian students, is exactly the kind of story that erodes trust in a destination\'s process integrity, distinct from the headline policy caps.',action:'Flag to any clients with non-credit/college-partnership pathways into Canada that PGWP eligibility for non-degree programmes is now being enforced retroactively — steer prospective applicants firmly toward degree/diploma/certificate programmes at public DLIs and away from non-credit partnership programmes until this is resolved.',industry:['First-order: agencies/institutions with non-credit-programme Canada pipelines face a sudden credibility and liability exposure with affected students.','Second-order: broader reputational drag on Canada as a study destination among Indian applicants specifically, compounding the existing SDS-closure and cap narrative.']},
+  {date:'Jul 28, 2026',published:'Jul 1, 2026',cat:'tuition',impact:'high',region:'AUS',trend:'down',tier:'T1',source:'ICEF Monitor',url:'https://monitor.icef.com/2026/07/surprise-hike-in-international-student-visa-application-fees-a-direct-hit-to-australias-competitiveness/',id:'aus-visa-fee',title:'Australia Hikes Student & Graduate Visa Fees ~25% With No Warning, Effective Jul 1',summary:'Australia\'s Department of Home Affairs raised international student and graduate-visa application fees effective immediately from 1 July 2026, with no prior consultation with the sector. The student visa fee (subclass 500, higher-ed/VET) rose from AU$2,000 to AU$2,500 (AU$2,050 for ASEAN nationals); the ELICOS student visa fee rose from AU$2,000 to AU$2,050; and the Temporary Graduate visa (485, post-study work) rose from AU$4,600 to AU$5,750. Comparing 2022 to 2026 fees, the student visa fee is up +285% and the graduate visa fee up +148%; year-on-year alone, both rose +25% in the past twelve months. This story was previously in this feed (as a Jul 19 entry) but was removed on the Jul 27 run as it aged past the 7-day floor, without a replacement item — re-added now as a genuine, verified coverage gap, not new news.',insight:'A +25% jump in the very fee that gates entry, landing with zero consultation, is a direct and immediate affordability hit on top of Australia\'s existing "managed growth" caps — ICEF\'s own framing calls it "a direct hit to Australia\'s competitiveness." Update (confirmed 26 Jul): the government has now explicitly confirmed the ASEAN rate is a deliberate diplomatic exemption, not an oversight — Assistant Minister Julian Hill said it reflects Australia deepening regional ties with Southeast Asia. That means India, Pakistan, and Bangladesh pay the full new AU$2,500/AU$5,750 fees while ASEAN applicants pay only a CPI-linked AU$2,050 — a real, government-confirmed cost differential between South and Southeast Asian applicants, not just a rounding artifact.',action:'Rebuild Australia-bound cost estimates to the new AU$2,500/AU$2,050/AU$5,750 fee figures immediately — this is a hard, already-effective cost change, not a future deadline like France\'s Aug 1 threshold. For India/Pakistan/Bangladesh-focused pipelines specifically, factor in the confirmed, durable cost gap versus ASEAN applicants when comparing Australia to other destinations.',industry:['First-order: every current and future Australia-bound applicant now pays materially more just to lodge a visa application, regardless of institution or agency.','Second-order: reinforces the "alternative/Europe destinations gaining share from Big-Four tightening" theme already tracked in this feed — Australia joins the US, UK, and Canada in raising cost/friction in the same window.']},
+  {date:'Jul 29, 2026',cat:'admissions',impact:'med',region:'US',trend:'down',tier:'T2',source:'The PIE News / EnglishUSA-BONARD',url:'https://thepienews.com/us-elt-hit-by-14-student-drop-and-shorter-stays/',id:'us-elt',title:'US English Language Teaching Sector Hit by 14% Student Drop, Shorter Stays',summary:'EnglishUSA and BONARD\'s new annual report (227 providers surveyed) found US English Language Teaching (ELT) student numbers fell 14% in 2025, with a near-20% drop in total student-weeks as students also stayed for shorter periods. EnglishUSA executive director Cheryl Delk-Le Good told The PIE the shorter stays compound the headline decline\'s impact on tuition revenue, staffing, and provider sustainability. Reported economic contribution from participating programmes fell to an estimated $870M, down from $950M in 2024. Experts cited domestic policy developments and visa barriers over the past two years as drivers and warned the decline could worsen in 2026.',insight:'ELT is usually the first rung on the US pathway ladder (language study → degree programme), so a 14% volume drop with even-steeper student-week erosion is a leading indicator for degree-level US enrollment pressure a year or two out, on top of the direct-application decline IIE\'s Spring Snapshot already documented.',action:'Treat US ELT/pathway partners as an early-warning signal, not just a standalone segment — a shrinking ELT pipeline today likely means fewer bachelor\'s/master\'s applicants from the same source markets in 2027/28.',industry:['First-order: US-based ELT providers and pathway partners face direct revenue and staffing pressure now.','Second-order: leading-indicator read-through to degree-level US enrollment pipelines 12–24 months out.']},
+  {date:'Jul 29, 2026',published:'Jun 25, 2026',cat:'partnerships',impact:'med',region:'Europe',trend:'down',tier:'T1',source:'The Irish Times / Irish Examiner / ICOS',url:'https://www.irishtimes.com/ireland/education/2026/06/25/foreign-language-students-in-limerick-left-in-dark-over-schools-future/',id:'limerick-closure',title:'Limerick English School\'s Abrupt Closure Leaves 250+ International Students in Limbo',summary:'Student Campus, an English-language school on Patrick Street in Limerick, closed abruptly without notice in June 2026. More than 250 enrolled students (including from Brazil and Chile) and 300+ who had already paid fees but not yet arrived were left without classes, with over 30 staff reportedly unpaid since April. The Irish Council for International Students (ICOS) says it has been contacted by hundreds of affected students and by the Chilean Embassy on behalf of its citizens; students need continuous enrollment to keep lawful immigration status in Ireland. As of late July, the Department of Justice says only that it is "monitoring the situation," with no resolution announced.',insight:'This lands awkwardly for Ireland just as this feed has separately tracked Ireland as a rising Big-Four alternative (record 2024/25 enrollments, Indian enrollments up nearly 30%, and a new International Education Mark quality-assurance push) — an unresolved provider-failure story with immigration-status stakes for students is exactly the kind of reputational risk that undercuts a "safe alternative destination" pitch if it drags on unresolved.',action:'If advising clients toward Irish ELT pathways, flag provider financial-stability diligence explicitly until Ireland\'s new International Education Mark quality-assurance regime is actually in force — this is precisely the gap it\'s meant to close.',industry:['First-order: affected students face immigration-status risk and financial loss with no clear government resolution over a month later.','Second-order: a live test of Ireland\'s regulatory response time on provider failure, right as it positions itself as a more trustworthy Big-Four alternative.']},
+  {date:'Jul 29, 2026',cat:'policy',impact:'high',region:'CAN',trend:'down',tier:'T1',source:'IRCC data / Barbican Immigration / ImmigCanada',url:'https://www.barbicanimmigration.ca/post/canada-sees-a-steep-decline-in-new-temporary-resident-arrivals',id:'canada-arrivals',title:'Canada: New Temporary Resident Arrivals Down ~70% Jan–May 2026 vs. 2024; New Study Permits Down ~83%',summary:'Newly released IRCC data shows new temporary resident arrivals to Canada fell nearly 70% between January and May 2026 versus the same period in 2024 — about 225,000 fewer arrivals. New study-permit arrivals specifically fell almost 83%; new temporary work-permit arrivals fell over 62%. This is arrivals data (new entrants), distinct from and more severe than the already-tracked 408,000 total-permits-to-be-issued figure — the government continues to frame this as progress toward its target of cutting temporary residents below 5% of the national population by end of 2027. Confirmed across two independent sources citing the same IRCC release.',insight:'An 83% collapse in new study-permit arrivals is a materially sharper decline than the aggregate 408K/−7% figure already in this feed suggests — that number describes planned 2026 issuances, this one describes what\'s actually happened on the ground Jan–May. Together they show the cap is landing harder and faster than the annual figure alone implies.',action:'Recalibrate any Canada-bound volume forecasts to the arrivals data, not just the annual permit-issuance target — the in-year trajectory is running well below even the already-reduced 2026 plan.',industry:['First-order: agencies/institutions with active Canada pipelines should expect enrollment realities well below the headline 408K annual figure.','Second-order: reinforces the diversification narrative already building in this feed (Ireland, Italy, New Zealand) as Canada volume craters faster than planned.']},
+  {date:'Jul 29, 2026',cat:'studyabroad',impact:'med',region:'Asia',trend:'up',tier:'T2',source:'The PIE News / Education New Zealand',url:'https://thepienews.com/not-an-australia-alternative-new-zealands-international-ed-sector-is-going-for-growth/',id:'nz-growth',title:'New Zealand Pitches Itself as a Destination in Its Own Right, Not an Australia Alternative',summary:'Speaking at The PIE Live Asia Pacific 2026 (Gold Coast, Jul 28–29), New Zealand sector leaders framed the country\'s growth strategy around a distinct offer — smaller scale, stronger community integration, high public support — rather than positioning as a fallback when Australia tightens. This follows ENZ\'s confirmed 2025 full-year data: 92,580 international enrollments, +11% year-on-year and 80% of pre-COVID peak, with strong growth from newer markets Sri Lanka and Nepal. At the same event, Australia\'s assistant minister for international education Julian Hill separately warned that 60–70% student concentration from one source country is bad for "student experience, social licence, soft power and business risk" — a live signal of Australia\'s own concentration-risk thinking alongside its Jul 1 fee hike and 2027 NOSC allocations already tracked here.',insight:'New Zealand explicitly rejecting the "Australia alternative" framing is a positioning signal worth tracking on its own terms — if it succeeds, it becomes a genuine fourth/fifth-choice destination competing on its own value proposition (community integration, diversification into Sri Lanka/Nepal) rather than simply absorbing Big-Four overflow.',action:'Treat New Zealand as a distinct-value-proposition market in client positioning, not a generic "Australia is full, try NZ" pivot — its own growth narrative (smaller scale, integration, diversification) is the actual sell.',industry:['First-order: NZ-focused recruitment should lean into community/outcomes messaging rather than Big-Four-overflow framing.','Second-order: Australia\'s own public commentary on concentration risk suggests further policy moves favoring source-market diversification are likely, not a one-off.']},
+  {date:'Jul 29, 2026',published:'Jul 6, 2026',cat:'tuition',impact:'high',region:'UK',trend:'down',tier:'T1',source:'Office for Students / Russell Group / MillionPlus',url:'https://www.officeforstudents.org.uk/news-blog-and-events/press-and-media/the-office-for-students-receives-funding-guidance-for-2026-27/',id:'uk-spg',title:'UK Strategic Priorities Grant Cut a Further £50.9M for 2026-27 — Second Consecutive Year of Cuts',summary:'The Office for Students confirmed on 6 July that the Strategic Priorities Grant (SPG) — England\'s main direct teaching-funding stream for universities — falls to £1.252bn for 2026-27, a £50.9m reduction versus 2025-26, on top of a £100m cut the year before (19% real-terms reduction over two years). Capital funding also drops slightly (£88m from £92m); HEIF research-collaboration funding is protected at £48m. Teaching-grant support is removed entirely for a range of subjects including nursing, computing, history, geography, archaeology, and creative/performing arts, alongside reduced student-premium funding for disadvantaged students. Russell Group and MillionPlus both issued critical responses; this compounds, and gives a harder number to, the "unstable hybrid future" warning already in this feed.',insight:'A second consecutive year of direct teaching-grant cuts, with nursing and computing losing dedicated support entirely, sharpens the financial-pressure case already building in this feed — institutions facing this alongside falling international fee income (their main offsetting revenue lever) have less room to absorb both hits at once.',action:'For UK-focused partnership or TNE conversations, expect providers hit hardest by the SPG cut (nursing/computing/creative-subject-heavy institutions) to be the most motivated counterparts for international-recruitment or franchise deals to offset the domestic funding loss.',industry:['First-order: universities delivering the affected subjects lose direct government support and must find alternative revenue, most plausibly international fees or partnerships.','Second-order: reinforces the “TNE/partnership expansion to offset domestic shortfalls” dynamic already flagged in this feed with a concrete, government-confirmed funding figure.']},
+  {date:'Jul 29, 2026',published:'Jul 23, 2026',cat:'admissions',impact:'med',region:'UK',trend:'up',tier:'T2',source:'UCAS / British Council',url:'https://opportunities-insight.britishcouncil.org/short-articles/news/ucas-data-shows-71-growth-undergraduate-applicants',id:'uk-ucas',title:'UK: International UCAS Applications Hit Record High (+7.1%); India Grows Only Modestly, Pakistan Falls',summary:'UCAS\'s final June-deadline data for the 2026 entry cycle shows international undergraduate applications reached a record 148,350 — up 7.1% year-on-year, the fastest growth in over a decade, pushing international students\' share of all UCAS applicants higher (72% of applications now go to the most selective institutions, versus 41% from UK students). China drove much of the growth (+12.2%). India remained the #2 source market but grew only modestly (+1.4%) — still an improvement on the 11.3% decline India saw the year before — while Pakistani applicants fell. Note: several outlets (including Shiksha) reported different, inconsistent India figures (8,870 vs. 11,470 applicants) drawn from an earlier, partial January "equal consideration" deadline snapshot rather than this final June dataset — this entry uses the reconciled, final UCAS/British Council figures.',insight:'The UK remains structurally open and growing for international UG applicants overall, but India\'s own trajectory is one of stabilization after a sharp prior-year decline, not renewed strong growth — a materially different story from China\'s continued acceleration in the same dataset.',action:'Frame UK positioning to India-outbound clients around "recovering, not surging" — set expectations against China\'s +12.2% growth rather than assuming India is riding the same wave.',industry:['First-order: UK institutions should not expect Indian UG application growth to mirror China\'s pace this cycle.','Second-order: Pakistan\'s decline alongside India\'s modest growth suggests South Asian demand for the UK is uneven by market, not moving as a bloc.']},
+  {date:'Jul 30, 2026',published:'Jul 9, 2026',cat:'partnerships',impact:'high',region:'Asia',trend:'up',tier:'T2',source:'The PIE News / Flinders University / Ministry of External Affairs (India)',url:'https://thepienews.com/flinders-university-announces-india-campus-as-modi-visits-australia/',id:'flinders-india',title:'Two Australian Universities Advance India Campuses: Flinders (Bengaluru) Gets Letter of Intent, Victoria University (Gurugram) Gets Full Approval',summary:'During PM Modi\'s official visit to Australia (8–10 Jul) for the third India-Australia Annual Summit, two concrete IBC/TNE outcomes were confirmed. Flinders University received a Letter of Intent from India\'s University Grants Commission to open a campus in Bengaluru, offering undergraduate/postgraduate business and technology programmes (including an MBA and Master of IT); first students expected early 2027, application details to follow. Victoria University went further, receiving a full Letter of Approval to set up and operate a campus in Gurugram (NCR) — a more advanced regulatory stage than Flinders\' LoI. IEAA chief executive Phil Honeywood noted that "with visa approvals so low, the only bright light of our bilateral education relationship is offshore delivery."',insight:'This is a direct, concrete template for the India-inbound IBC vertical this consultancy tracks: two different Australian universities at two different regulatory stages (LoI vs. full approval) in the same week, both explicitly framed by sector leaders as a hedge against collapsing outbound visa approvals. The Honeywood quote is the clearest articulation yet of the strategic logic driving Big-Four universities toward India campuses — not opportunistic expansion, but a direct response to tightening study-visa numbers.',action:'Track both campuses\' application-timeline announcements closely (Flinders\' "later this year" detail release, Victoria\'s Gurugram operational timeline) — these are live, near-term IBC opportunities to map against India\'s UGC/regulatory approval pipeline for other prospective foreign-university entrants.',industry:['First-order: Bengaluru and Gurugram gain concrete new Australian-university IBC options within the next 12–18 months, direct competition for existing India campus operators.','Second-order: explicit sector commentary linking IBC expansion to outbound-visa weakness suggests more Big-Four universities will pursue the same India-campus hedge — a trend to watch for additional entrants, not a one-off.']},
+  {date:'Jul 31, 2026',cat:'workrights',impact:'high',region:'US',trend:'down',tier:'T1',source:'Forbes / SCMP / Benzinga / The PIE News',url:'https://www.forbes.com/sites/annaesakismith/2026/07/31/trump-weighs-100000-fee-for-international-graduates-to-work-in-the-us/',id:'opt-100k',title:'Trump Administration Weighs a $100,000 Fee on OPT Post-Study Work',summary:'Multiple outlets (Forbes, SCMP, Benzinga, NewsNation, The PIE) reported Jul 30–31 that the Trump administration is weighing a $100,000 fee on Optional Practical Training (OPT) — the programme that lets international graduates work in the US for one to three years after a degree. Roughly 419,000 graduates were on OPT in 2024. It is a proposal under discussion, NOT yet signed off or finalised. It mirrors the administration\'s earlier $100,000 H-1B fee, which was narrowed to new-from-abroad hires after industry pushback and partly blocked by a Boston federal appeals court. Update (3 Aug): DHS reiterated that "no policies should be considered final until formally announced" (Forbes/Stuart Anderson, 3 Aug) — a week on, still no implementing rule, fee schedule, or eligibility guidance has been published, so it remains a proposal, not a policy.',insight:'OPT is one of the single biggest reasons students choose the US and a core justification for high tuition — a $100k fee would functionally price most graduates out of post-study work and could be more damaging to US inbound demand than the Sept 15 duration-of-status rule already in force. Because it is still only a proposal, the near-term effect is uncertainty: expect it to surface immediately in competitor destinations\' pitches (Canada PR pathway, UK, Australia) even before any rule exists. India is the single most exposed market: Indians were ~48% of new STEM OPT authorisations in 2024 and roughly 97,600 Indians were on OPT that year — the largest single-country group by far (Open Doors 2024) — so the fee would land disproportionately on Indian STEM graduates.',action:'Add the $100k-OPT scenario to US-bound client risk conversations now as a downside case, and lean into post-study-work certainty elsewhere (Canada\'s new PR pathway, UK Graduate Route) in comparative positioning — but flag clearly that it is a proposal, not law, to avoid over-steering families on unconfirmed policy.',industry:['First-order: heightened uncertainty depresses US post-study-work appeal immediately, compounding the Sept 15 rule and the visa-denial-driven application decline already in this feed.','Second-order: destinations with clearer post-study-work routes (Canada, UK, Australia, Germany) gain a sharper comparative pitch — a tailwind for agencies with multi-destination portfolios.'],impacts:['Shorelight','INTO University'],thread:'US post-study-work squeeze',india:true},
+];
+// TENDER-ROTATION-CURSOR (tiered system, replaces flat region rotation as of Jul 23, 2026):
+// TIER 1 — search EVERY weekly run, never rotates: USA, UK, Canada, Australia, Ireland, Germany, Netherlands, Singapore, UAE
+// TIER 2 — search every 2 weeks, alternating group: next=T2-B (Japan, South Korea, Malaysia, New Zealand) | last covered=T2-A (France, Sweden, Denmark, Norway, Finland), swept Jul 25, 2026
+// TIER 3 — search monthly, 4-group rotation: next=T3-2 (Czech Republic, Austria, Belgium, Switzerland) | order: T3-2 -> T3-3 (Saudi Arabia, Qatar, Brazil) -> T3-4 (Chile, Mexico, South Africa) -> back to T3-1 (Spain, Italy, Portugal, Poland) | last covered=T3-1, swept Jul 25, 2026
+// Each weekly run searches: all of Tier 1 (always) + whichever Tier 2 group is due (alternate every run) + whichever Tier 3 group is due (advance every run) — then advances both the Tier 2 and Tier 3 cursors above.
+const TENDERS=[
+  {type:'Request for Information',region:'AUS',issuer:'WA Dept. of Training and Workforce Development',title:'Integrated Student Management & Finance Solution — RFI',desc:'RFI seeking market input on an integrated student management and finance platform for WA training providers. Precursor to a formal tender; vendors serving international recruitment/CRM stacks should respond to shape the eventual RFP.',value:'Undisclosed',deadline:'Aug 28, 2026',dlClass:'dl-amber',url:'https://tenderimpulse.com/government-tenders/australia/request-for-information-integrated-student-management-and-finance-solution-13888088',priority:'Medium',pClass:'med',fit:'Enrolment-tech / CRM & student-management platform vendor',caps:'Integrated student-management + finance platform, ideally interoperable with recruitment/CRM stacks',repeat:'Possible — platform contracts tend to run multi-year once awarded',why:'This is an RFI, not yet a binding tender, and the value is undisclosed — so lower immediate priority, but responding now is how a vendor shapes the eventual RFP spec. Note it is a student-management/finance systems buy, adjacent to (not squarely inside) core recruitment services.'},
+  ];
+// NOTE (Jul 23, 2026 second audit): removed 2 more UK entries after direct verification. Glasgow Caledonian's real submission deadline was 6 Mar 2026 (already closed — dashboard incorrectly showed Sep 12). "UK Public Institution" was actually Capital City College, real deadline 19 May 2026 (also closed — dashboard showed Oct 1). Both deadlines appear to have been fabricated in the original seed data, not just stale. Daily/weekly tasks now required to fetch and confirm a notice's actual deadline before adding or trusting it — never carry forward a deadline without checking the live page.
+// NOTE (Jul 23, 2026 third pass): user submitted 3 candidate tenders. Verified via direct fetch: (1) LSBU International Student Recruitment Marketing and Conversion — confirmed genuinely open, deadline Jul 24, 2026, £3M/£3.6M value — ADDED above. (2) University of Exeter "Overseas Offices Framework" — fetched the live notice and found it was already AWARDED 16 Jul 2025 to three suppliers (Grok Global Services, Onestep Global Ingress, Sannam S4) for a 4-year framework running Aug 2025–Aug 2029, £4M value — NOT added, it is closed, not an open opportunity (the user's source had incorrectly framed it as still open — a caught instance of stale/wrong tender data). (3) Alberta #NRFP-26-27-1473 — the user's own source hedged this ("similar," "e.g. NorQuest College or similar," no working link) — could not independently verify a real notice, so NOT added per Zero Fabrication Policy.
+
+// NOTE (Jul 24, 2026 daily run): re-fetched LSBU notice 056358-2026 — confirmed still OPEN, submission deadline 24 Jul 2026 5:00pm (today), award decision 11 Sep 2026 — kept. Broad UK/US/AUS/CAN recruitment-marketing sweep surfaced only already-closed notices (Texas MRB-55531 closed 23 Jul; Cal State CI-273 issued May, start late Jul) — none verifiably open, so none added per Zero Fabrication. WA RFI (Aug 28) unchanged.
+// NOTE (Jul 25, 2026 daily run): no same-day (Jul 25) breaking news. Purged the three Jul 18 items (Bloomberg, QS 2027, Calgary PGWP) as they left the 7-day window; purged QS from Company Health (Jul 17, aged out); removed the LSBU tender (closed 5pm Jul 24). A source-level sweep (ICEF, PIE) added three in-window Jul 22–24 stories: London HE-capital campaign (Jul 24, PIE), Irish recruitment pivot (Jul 22, PIE), Italy €420M mobility programme (Jul 22, ICEF, fetch-verified). UK student levy (Jul 15) and Australia 2027 target (Jul 9) confirmed real but outside the 7-day window, so excluded. Feed = 13 stories; WA RFI (Aug 28) the only open tender.
+// NOTE (Jul 25, 2026, T2-A/T3-1 tender sweep): ran the overdue first pass on T2-A (France, Sweden, Denmark, Norway, Finland) and T3-1 (Spain, Italy, Portugal, Poland), searching national/EU portals (TED, Doffin, Hilma, udbud.dk, e-avrop/TendSign, plus direct university procurement pages) for recruitment/marketing/admissions-services notices. No candidate cleared the Zero Fabrication bar: France and Nordic searches surfaced only academic-staff recruitment listings and generic scholarship/study-destination content, not procurement notices; a Denmark udbud.dk notice ("international recruitment and implementation") could not be verified — page requires JS rendering our fetch tool can't execute, so left out unconfirmed; an Italian notice (Università della Tuscia, Mobility Online student-mobility/recruitment software licence) was located but its live page returned only site navigation, no deadline/value/status, so also left out unconfirmed. No open, on-topic, fetch-verified tenders found in either group. Rotation cursors advanced regardless — next up: T2-B (Japan, South Korea, Malaysia, New Zealand) and T3-2 (Czech Republic, Austria, Belgium, Switzerland). WA RFI (Aug 28) remains the only open tender in the feed.
+// NOTE (Jul 25, 2026, first active Market State Signals check under new Daily Update Checklist policy): checked all 7 signals against today's search, not just their STALE_DAYS flags. US Intl Enrollment (−20%) and Scholarship Funding (−$74M) re-confirmed accurate against current reporting (NAFSA FY26 appropriations detail, IIE/NSC enrollment data) — no newer figure exists, asOf left unchanged since nothing moved. TOEFL iBT (85min) and Alt Destinations (Ireland/Germany/Japan/Portugal gaining) also re-confirmed, no change. Canada Permits 2026 (408K, −7% YoY) re-confirmed against ICEF/IRCC reporting — unchanged, but note a genuinely new adjacent development surfaced: IRCC published a ministerial public policy (signed Jun 25, posted Jul 21) and processing guidance (Jul 22) opening an in-Canada PR pathway for certain international-student pilot-policy applicants — flagged for possible separate NEWS entry, not folded into this signal since it doesn't change the permit-count figure. UK Grad Route was CORRECTED, not just re-confirmed: it had been showing '18mo' as the current value, but current reporting (UKCISA, Freeths, multiple immigration-law sources) confirms the reduction from 24 to 18 months only applies to applicants from 1 January 2027 — graduates applying before then still get 24 months. Updated to '24→18mo' with a sub-label stating both the current and confirmed-future figures, asOf bumped to Jul 25. Policy Climate (6/7) checked against today's sweep — no country's status changed, left unchanged.
+// NOTE (Jul 25, 2026, second pass — user flagged the signal bar as looking stale/unmaintained from a screenshot): the earlier same-day check above had re-confirmed US Intl Enrollment and Scholarship Funding as "still accurate" but left their asOf dates untouched (Jul 14 and Jul 10), which is exactly what produced the client-facing problem — a "checked every daily run" badge sitting next to an 11–15-day-old date reads as neglected, not verified, especially once STALE_DAYS trips the amber "needs check" warning. Went back and searched specifically for ANY fresh dated source touching each figure, not just a reconfirmation of the number: found new federal I-94 arrival data (EPIGraph, published Jul 23, 2026) showing arrivals down 5–8% Mar–May YoY, which directly supports and updates the US Intl Enrollment tile — asOf moved to 2026-07-23, sub-text now cites the arrival data alongside the original 63% institutional-survey figure. Also found that the US House rejected an amendment to fully eliminate Fulbright funding, 79–348 (vote Jul 15, reported Jul 17) — a genuinely new, dated development for the Scholarship Funding tile even though the headline −$74M figure is unchanged; asOf moved to 2026-07-17, sub-text now notes the defeated elimination attempt. Policy Climate (6/7) still has no fresher confirming source as of today — left at 2026-07-14, and will now show the "needs check" flag under the tightened threshold below, which is the honest outcome, not a bug. Also tightened STALE_DAYS from 14 to 7 per the user's explicit instruction to prioritize the last 7 days over older-but-still-true data — a signal that hasn't been backed by a source newer than a week should visibly flag for review rather than sit quietly for two weeks before saying anything. Going forward, "re-confirmed, no change" is not sufficient on its own — each run must specifically search for a fresher dated source before settling for an old asOf.
+// NOTE (Jul 25, 2026, THIRD pass — user correctly rejected the second-pass approach): user pointed out that continuing to search the internet for fresher sources on the same 3 fixed topics (Policy Climate, TOEFL, Scholarship Funding) was solving the wrong problem — those topics are structurally slow-moving (TOEFL's format changed once, in Jan 2026; the "6/7 nations" count only moves when a country's status flips), so no search would ever reliably keep them under 7 days without eventually citing a tangential article just to fabricate a fresher date. The real fix, per the user: stop treating SIGNALS as 7 permanently assigned topics at all. Rebuilt it instead as a rotating panel populated from the standout numeric stat in whatever is actually in the last 7 days of NEWS — dropped Policy Climate and TOEFL entirely (no qualifying fresh news this week) and swapped Scholarship Funding (best available anchor was 8 days old) for three tiles pulled straight from already-verified in-feed stories: UK HE Financial Distress (45% deficit, HEPI, Jul 23), Kenya Funding Bill (proposed Sept 2026, Jul 21), and Africa Visa Hub Shift (Aug 1 realignment, Jul 24). Kept US Enrollment, Canada Permits, UK Grad Route, and Alt Destinations since those already had genuine sub-7-day backing. Result: all 7 tiles now dated Jul 21–25 with zero new searching required — the freshness came entirely from stories already fetch-verified elsewhere in this file. The governing rule above (Market State Signals section) was rewritten accordingly — this is now a required model change, not a one-off fix, so the panel doesn't drift back into fixed named topics on the next run.
+// NOTE (Jul 26–30, 2026 daily runs): full audit trail for these runs retained in prior file versions; consolidated here for length. Net across the window: NEWS grew and rotated with the 7-day floor advancing Jul 19→23; SIGNALS and SNAPSHOT were both rebuilt as rotating arrays (see governing rules above); a `published` field + Backfill badge were added to distinguish original-publish date from feed-add date; TODAY_LABEL was introduced as the single source of truth for the display date (closing a bug class where four hardcoded date strings drifted independently); the DELTA_BRIEFING sequencing rule was codified; and the Market Disruption alert gained an asOf + mandatory per-run re-evaluation. Jul 30 run: floor advanced to Jul 23, purged five Jul 22 stories (UK PM/DSIT, Irish recruitment shift, Italy €420M, IRCC compliance update, NSF China-collaboration bar), added the Flinders/Victoria India-campus story, recomputed all jumpToStory indices and in-text idx cross-references after the reshuffle.
+// NOTE (Jul 30, 2026, sync + cleanup pass): adopted the consolidated Jul 30 version as the working copy and applied three fixes flagged in audit — (1) restored the corrupted "Clickable signal bar" comment that had dictation text spliced into it; (2) purged the Language Trends England 2026 Reports item (Jul 22), now past the Jul 23 7-day floor, leaving Reports at its honest empty state with no in-window tracked-org report; (3) recomputed the ALERT verdict's time-relative language (Sept 15 is ~6.5 weeks from Jul 30, not "roughly seven weeks").
+
+// NOTE (Aug 2, 2026 daily run — full sweep per user request): today Aug 2 → 7-day floor = Jul 26. PURGED 7 stories dated Jul 23–24 (DHS Sept-15 rule, Canada 408K, Nine-UK-scholarships, Africa hubs, London campaign, HEPI, ApplyBoard-refusal); each checked for successor coverage first — DHS via ALERT + the new OPT story, Canada volume via the arrivals story, UK finance via the SPG cut, ApplyBoard via its SNAPSHOT tile. Africa hubs + France threshold both took effect Aug 1, so both WATCHLIST items were removed (now past) and the events noted as live in Why Today/Signals. SWEPT ICEF, PIE, broad: ONE new multi-source-verified add — Trump admin weighing a $100,000 OPT fee (Forbes/SCMP/Benzinga/NewsNation/PIE, Jul 30–31), flagged as a proposal not law. NOT added: US World Cup visa-processing squeeze (June/July retrospective, out of window, theme covered). Regenerated Why Today / Exec Priorities / Number of the Day; recomputed jumpToStory indices against the reshuffled 13-story array (OPT=12, France=1, IIE=2, Calgary=3, Flinders=11). SIGNALS: swapped the stalest tile (UK HE Distress, Jul 23) for a US OPT-fee tile, updated Africa hubs to 'Live'. SNAPSHOT: fixed two tiles that pointed at purged stories. DELTA_BRIEFING → Jul 30; TODAY_LABEL + cutoff → Aug 2.
+// NOTE (Aug 3, 2026 daily run — discovery sweep per user request): today Aug 3 → 7-day floor = Jul 27. PURGED 1 story: the Jul 26 IRCC in-Canada PR pathway (aged past floor); its thread carries in the remaining Canada coverage. SWEPT Tier A (USCIS/IRCC/PIE/ICEF + India sources) + Tier B1/C1: NO new market-moving story dated Aug 1–3 — a genuinely quiet day, not a search shortfall. Verified at source: OPT $100k still only a proposal under WSJ/DHS discussion (no rule); NZ 6-month Short-Term Graduate Work Visa (applications open Nov 16, 2026) confirmed but announced Mar/May 2026 — out of window, reinforces existing NZ story, not re-added; UNSW/Bristol India campuses opening Aug 2026 are standing facts, not dated in-window breaks (IBC tracker was removed by design). NOT added: none cleared the in-window + Zero-Fabrication bar. SIGNALS: replaced the aged UK Grad Route tile (asOf Jul 25, past floor) with UK Intl Applications +7.1% (UCAS, Jul 29, in-window, India-flagged). SNAPSHOT: dropped IDP (Jul 17) and ApplyBoard (Jul 23) as aged past floor — 2 honest tiles remain, no padding. Recomputed jumpToStory indices against the 12-story array after the purge (France=0, IIE=1, Calgary=2, Flinders=10, OPT=11); Exec Priorities updated. Cleaned 5 stale inline (idxN) cross-refs from story text. ALERT re-evaluated: DHS Sept 15 still top disruption, timing → ~6 weeks, asOf Aug 3. Regenerated Why Today (quiet-day framing) / Exec Priorities. DELTA_BRIEFING → Aug 2; TODAY_LABEL + cutoff → Aug 3. Cadence cursor unchanged (same week as Aug 2 → Tier B1/C1).
+// NOTE (Aug 4, 2026 daily run — discovery sweep): today Aug 4 → 7-day floor = Jul 28. PURGED 1 story: France's Aug 1 proof-of-funds threshold (france-877, dated Jul 27, aged past floor and now in force). Feed = 11 stories, Jul 28–31. SWEPT Tier A (USCIS/IRCC/PIE/ICEF + India sources) + B1/C1: NO new market-moving TOPIC dated Aug 1–4 — another genuinely quiet day. One in-window development verified at source: the OPT $100k thread got fresh Aug 3 coverage (Forbes/Stuart Anderson) in which DHS reiterated "no policies should be considered final until formally announced" — no rule/fee-schedule/guidance published, still a proposal. Folded that update into the OPT story summary + the US OPT signal tile (asOf Aug 4); did NOT create a duplicate entry (same thread, no new topic). NOT added: DHS H-1B reform proposed rule is flagged for August but not yet published (no firm date) — noted in Why Today, left off WATCHLIST pending a real date per Zero Fabrication; NZ graduate visa + India campus items remain out-of-window/standing facts as before. STABLE IDs: first run using slugs — purging France required NO index recomputation; only France's own Exec Priority was swapped (→ Australia visa fees, aus-visa-fee) since its story left. SIGNALS/SNAPSHOT: all tiles still in-window (≥ Jul 28), no swaps needed. ALERT: DHS Sept 15 still top disruption, ~6 weeks out, asOf Aug 4. Regenerated Why Today (quiet-day) / Exec Priorities; Number of the Day unchanged ($100k, still dominant). DELTA_BRIEFING → Aug 3; TODAY_LABEL + cutoff → Aug 4. Cadence cursor unchanged (same week → Tier B1/C1). SOCIAL SCAN (X/Twitter, Aug 1–4): dominant theme was the OPT fee (already the lead story) — no addable news; social sentiment is a lead, not a source. Evaluated then REJECTED an Australia social-licence PIE opinion piece (verified real but sentiment/opinion, below the bar, redundant with the visa-fee + concentration-risk items already in feed). One data claim was worth verifying: a viral post cited 363k Indian students / 144k on OPT / 48% of STEM OPT. Checked against Open Doors 2024: the 48%-of-new-STEM-OPT figure and ~97,556 Indians-on-OPT CONFIRMED and folded into the OPT story insight; the post's 363k and 144k figures did NOT verify (Open Doors: ~331,602 enrolled, ~97,556 on OPT) and were NOT used.
+// NOTE (Aug 5–6, 2026 daily rolls — quiet stretch): Aug 5 floor→Jul 29 aged out the 3 Jul 28 stories (IIE, Calgary, Australia fees); Aug 6 floor→Jul 30 aged out the entire Jul 29 cluster (US ELT, Limerick, Canada arrivals, NZ, UK SPG, UCAS). Both handled by the FLOOR filter (TODAY_LABEL drives it); physical array purge of the 9 out-of-window objects DEFERRED (FLOOR hides them; array not growing) — trim next active run. Discovery Aug 4–6 across Tier A (USCIS/IRCC/PIE/ICEF + India sources): NO new hard topic — genuinely quiet; H-1B reform rule still expected-August but UNPUBLISHED (added to WATCHLIST as a forward item, targetIso end-Aug, timing unconfirmed per Zero Fabrication). User chose to KEEP STRICT 7-day despite the drain, so feed now = 2 in-window stories (Flinders Jul 30, OPT Jul 31). SIGNALS trimmed to 3 survivors (US OPT Fee, India Campuses, Africa Hubs) — the 5 Jul 29 tiles aged out with their stories; quiet week = fewer tiles, no padding. Exec Priorities rebuilt to 3, all pointing at in-window stories. Why Today rewritten to explain the drain honestly. Stable IDs meant surviving links needed no renumbering. Dates/cutoff/ALERT → Aug 6 (Sept 15 now ~5.5 weeks); DELTA_BRIEFING → Aug 5.
+// ── WATCHLIST — regulatory & publication deadlines to track (not attend) ──
+const WATCHLIST=[
+  {title:'DHS F-1/J-1 4-Year Rule — Effective Date',type:'Compliance Deadline',targetIso:'2026-09-15',note:'The finalized 4-year duration-of-status rule takes effect. Students exceeding the cap without a filed Extension of Stay risk falling out of status — DSO offices need filing pipelines live before this date.',filterCat:'policy',filterRegion:'US'},
+  {title:'DHS H-1B Reform Proposed Rule — Expected',type:'Regulatory (expected)',targetIso:'2026-08-31',note:'DHS regulatory agenda flags an H-1B reform proposed rule for around August 2026 — eligibility/cap-exemption changes, third-party-placement scrutiny, and reportedly higher fees touching Indian outsourcing firms. Not yet published; timing unconfirmed. Directly relevant to Indian graduates moving from OPT to H-1B — watch for the NPRM.',filterCat:'workrights',filterRegion:'US'},
+  {title:'UK "Visa Brake" — High Court Judgment Expected',type:'Legal / Policy',targetIso:'2026-09-15',note:'The High Court heard the challenge to the UK visa brake (bans student visas for Afghanistan, Cameroon, Myanmar, Sudan; introduced Mar 2026) in a rolled-up expedited hearing on 28 Jul 2026; judgment expected mid-Sept. Precedent-setting on whether a government can nationality-brake study visas on asylum-claim metrics — a structural destination-risk signal, even though the four affected markets are non-core. Sources: The PIE, Times Higher Education, DPG Law.',filterCat:'policy',filterRegion:'UK'},
+  {title:'Australia Visa Cap — Next Allocation Round',type:'Cap Review',targetIso:'2026-09-01',note:'Universities can bid for extra places above the 295,000 cap by demonstrating Southeast Asia engagement and accommodation capacity.',filterCat:'policy',filterRegion:'AUS'},
+  {title:'IRCC Canada PGWP Eligible-Fields Update',type:'Policy Update',targetIso:'2026-09-15',note:'IRCC typically announces changes to PGWP-eligible fields of study annually around this window — watch for 2027 intake implications.',filterCat:'workrights',filterRegion:'CAN'},
+  {title:'UK Graduate Route Cut to 18 Months — Takes Effect',type:'Policy Change',targetIso:'2027-01-01',note:'Students who apply on or before 31 Dec 2026 retain the current 2-year Graduate Route. After this date the reduced 18-month rule applies.',filterCat:'workrights',filterRegion:'UK'},
+  {title:'QS World Rankings 2027 — Full Release',type:'Publication',targetIso:'2026-09-10',note:'Full methodology breakdown and subject rankings follow the headline release — expect renewed institutional positioning activity.',filterCat:'rankings',filterRegion:'Global'},
+  {title:'IIE Open Doors 2026 — Annual Report',type:'Publication',targetIso:'2026-11-17',note:'The definitive annual dataset on US international student enrollment — sets the narrative for the following recruitment cycle.',filterCat:'admissions',filterRegion:'US'},
+];
+
+// COMPANIES array (long-form company news) removed Jul 23, 2026 audit — dead code, never rendered (renderIndustry() had zero call sites), contained duplicate/superseded facts (including the original fabricated Shorelight $10.4M/$34.1M figures already corrected in CO_STATUS).
+let VIEW='overview';
+const F={cat:'all',impact:'all',region:'all',trend:'all'};
+let Q='';
+
+function setView(v, btn){
+  VIEW=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll(`[data-view="${v}"]`).forEach(el=>el.classList.add('active'));
+  render();
+}
+
+function jumpToStory(idx){
+  clearFilters();
+  setView('news',document.querySelector(`[data-view="news"]`));
+  setTimeout(()=>{
+    const el=document.getElementById('story-'+idx);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('story-flash');setTimeout(()=>el.classList.remove('story-flash'),1600);}
+  },60);
+}
+
+function sf(type,val,btn){
+  document.querySelectorAll(`[data-f="${type}"]`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  F[type]=val;
+  render();
+}
+function doSearch(v){Q=v;render();}
+
+function tog(idx){
+  const box=document.getElementById('ib'+idx);
+  const btn=document.getElementById('tb'+idx);
+  if(!box||!btn)return;
+  const o=box.classList.toggle('hidden');
+  btn.classList.toggle('open',!o);
+}
+
+function matchNews(n){
+  return inWindow(n)&&(F.cat==='all'||n.cat===F.cat)&&(F.impact==='all'||n.impact===F.impact)&&(F.region==='all'||n.region===F.region)&&(F.trend==='all'||n.trend===F.trend)&&(!Q||(n.title+n.summary+n.source).toLowerCase().includes(Q.toLowerCase()));
+}
+
+function srcBadge(tier){
+  if(tier==='T1')return'<span class="src-badge sb-gov">🟢 Official</span>';
+  if(tier==='T2')return'<span class="src-badge sb-trade">🔵 Industry</span>';
+  return'<span class="src-badge sb-media">🟡 Media</span>';
+}
+
+function renderNews(vis){
+  if(!vis.length){
+    const chips=[];
+    if(F.cat!=='all')chips.push(`<span class="preset-btn" onclick="sf('cat','all',document.querySelector('[data-f=cat][data-v=all]'))">Reset Category</span>`);
+    if(F.region!=='all')chips.push(`<span class="preset-btn" onclick="sf('region','all',document.querySelector('[data-f=region][data-v=all]'))">Reset Region</span>`);
+    if(F.impact!=='all')chips.push(`<span class="preset-btn" onclick="sf('impact','all',document.querySelector('[data-f=impact][data-v=all]'))">Reset Impact</span>`);
+    if(Q)chips.push(`<span class="preset-btn" onclick="Q='';document.querySelector('.search-inp').value='';render();">Clear Search</span>`);
+    return `<div class="empty-msg">No stories match your current filters or search.<br><div style="margin-top:10px;">${chips.join(' ')} <span class="preset-btn" onclick="clearFilters()">✕ Clear all filters</span></div></div>`;
+  }
+
+  // What Changed Since Yesterday block
+  const isFiltered=F.cat!=='all'||F.impact!=='all'||F.region!=='all'||F.trend!=='all'||Q;
+  const deltaHtml=!isFiltered?`<div class="delta-block">
+    <div class="delta-head">📊 What's New — ${DELTA.note}<span class="freq-badge freq-daily">🔄 Daily</span></div>
+    <div class="delta-grid">
+      <div class="delta-item"><div class="delta-label">New Stories</div><div class="delta-val pos">+${DELTA.newStories}</div><div class="delta-sub">Added ${DELTA.date}</div></div>
+      <div class="delta-item"><div class="delta-label">High Impact</div><div class="delta-val neg">${DELTA.highImpact} critical</div><div class="delta-sub">Require action today</div></div>
+      <div class="delta-item"><div class="delta-label">Total Stories</div><div class="delta-val warn">${DELTA.totalStories}</div><div class="delta-sub">Across ${Object.keys(CAT).length} categories</div></div>
+    </div>
+    <div class="delta-movements">${DELTA.movements.map(m=>`<div class="delta-move ${m.dir}"><strong>${m.cat}</strong> ${m.dir==='down'?'↓':'↑'} — ${m.note}</div>`).join('')}</div>
+  </div>`:'';
+
+  // Executive summary (only shown when no filter active)
+  const execTake=!isFiltered?`<div class="exec-take">
+    <span class="exec-take-label">CEO Summary · 30 sec</span>
+    <span class="exec-take-text">A quieter week for breaking news, but the direction holds: the US and Australia keep tightening (the Aug 1 African visa-hub realignment and the Sept 15 DHS rule) while Europe gains — Ireland at a record 44,535 international students, Italy funding mass outbound mobility, and London mounting a “world HE capital” push. Nothing this week moves your hard planning dates; use the lull to firm up the Q3 forecast.</span>
+  </div>`:'';
+
+  const grps={};
+  vis.forEach(n=>{if(!grps[n.date])grps[n.date]=[];grps[n.date].push(n);});
+  const sortedDates=Object.keys(grps).sort((a,b)=>new Date(b)-new Date(a));
+  let html=deltaHtml+execTake;
+  sortedDates.forEach(date=>{
+    const items=grps[date];
+    html+=`<div class="tl-date">${date}</div>`;
+    items.forEach((n,i)=>{
+      const idx=n.id; // stable per-story id (see NEWS array) — cards/anchors key off this, never array position
+      const t=TREND[n.trend];
+      const isHigh=n.impact==='high';
+      const isOpp=n.trend==='up';
+      const newBadge=n.isNew?'<span class="new-badge">🆕 New Today</span>':'';
+      const backfillBadge=(n.published&&n.published!==n.date)?`<span class="thread-badge" style="background:#fef3c7;color:#92400e;" title="Published ${n.published}, only added to this feed on ${n.date}">📌 Backfill — published ${n.published}</span>`:'';
+      const oppBadge=isOpp?'<span class="opp-badge">📈 Opportunity</span>':'';
+      const threadBadge=n.thread?`<span class="thread-badge">🧵 ${n.day?`Day ${n.day} · `:''}${n.thread}</span>`:'';
+      const innovBadge=n.cat==='innovation'?'<span class="thread-badge" style="background:#faf5ff;color:#7e22ce;">💡 Innovation Watch</span>':'';
+      const industryBlock=n.industry&&n.industry.length?`<div class="industry-block"><div class="ind-label">🔮 What this means for the industry <span class="ind-tag">· forward assessment</span></div><ul>${n.industry.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'';
+      const impactChips=n.impacts&&n.impacts.length?`<div class="impact-chips">Company exposure: ${n.impacts.map(c=>`<span class="impact-chip" onclick="filterCompany('${c}')" title="View in Industry Trend">${c}</span>`).join('')}</div>`:'';
+      html+=`<div class="story ${n.impact} ${isOpp?'opportunity':''}" id="story-${idx}" style="animation-delay:${i*.04}s">
+        <div class="story-meta">
+          <span class="impact-dot dot-${n.impact}"></span>
+          <span class="cat-tag">${CAT[n.cat]}</span>
+          <span class="region-tag">${n.region}</span>
+          <span class="trend-tag ${t.cls}">${t.txt}</span>
+          <span class="tier-tag" style="margin-left:auto;">${srcBadge(n.tier)} ${n.source}</span>
+        </div>
+        <h3>${n.title}${newBadge}${backfillBadge}${oppBadge}${threadBadge}${innovBadge}</h3>
+        <p class="sum">${n.summary}</p>
+        ${isHigh||isOpp
+          ? `<div class="insight-block ${isOpp?'opp-insight':''}"><div class="ins-label">${isOpp?'📈 Why this is an opportunity':'💡 Why it matters'}</div><p>${n.insight}</p><span class="action ${isOpp?'opp-action-tag':''}">✓ ${n.action}</span></div>`
+          : `<button class="tog-btn" id="tb${idx}" onclick="tog('${idx}')"><span class="arr">▶</span> Analysis & Action</button>
+             <div class="insight-block hidden" id="ib${idx}"><div class="ins-label">💡 Why it matters</div><p>${n.insight}</p><span class="action">✓ ${n.action}</span></div>`
+        }
+        ${industryBlock}${impactChips}
+        <div class="story-footer">
+          <span class="story-src"><strong>${n.source}</strong> · ${n.published&&n.published!==n.date?`Published ${n.published} · added to feed ${n.date}`:n.date}</span>
+          <a class="read-link" href="${n.url}" target="_blank">Read source →</a>
+        </div>
+      </div>`;
+    });
+  });
+
+  return html;
+}
+
+function renderTenders(){
+  const vis=TENDERS
+    .filter(t=>!Q||(t.title+t.desc+t.issuer).toLowerCase().includes(Q.toLowerCase()))
+    .sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+  if(!vis.length)return'<div class="empty-msg">No tenders found.</div>';
+  return vis.map((t,i)=>`
+    <div class="tender" style="animation-delay:${i*.05}s">
+      <div class="tender-meta">
+        <span class="tender-type">${t.type}</span>
+        <span class="tender-region">${t.region}</span>
+        <span class="deadline-badge ${t.dlClass} " style="margin-left:auto;">Closes ${t.deadline}</span>
+      </div>
+      <h3>${t.title}</h3>
+      <div class="issuer">Issuer: <strong>${t.issuer}</strong></div>
+      <p class="tdesc">${t.desc}</p>
+      ${t.priority?`<div class="opp-read">
+        <div class="opp-read-head">🎯 Opportunity Read <span class="priority-badge pr-${t.pClass}">${t.priority} priority</span><span class="opp-assess">· editorial assessment, not a quoted figure</span></div>
+        <div class="opp-row"><span class="opp-k">Best-fit pursuer</span><span class="opp-v">${t.fit}</span></div>
+        <div class="opp-row"><span class="opp-k">Required capabilities</span><span class="opp-v">${t.caps}</span></div>
+        <div class="opp-row"><span class="opp-k">Repeat potential</span><span class="opp-v">${t.repeat}</span></div>
+        <div class="opp-why">${t.why}</div>
+      </div>`:''}
+      <div class="tender-footer">
+        <span class="tender-val">Est. value: ${t.value}</span>
+        <a class="tender-link" href="${t.url}" target="_blank">View tender →</a>
+      </div>
+    </div>`).join('');
+}
+
+function daysFromToday(isoDate){
+  const today=new Date();today.setHours(0,0,0,0);
+  const target=new Date(isoDate);target.setHours(0,0,0,0);
+  return Math.round((target-today)/(1000*60*60*24));
+}
+// Age in days since a past ISO date — used to self-flag stale Market State / Snapshot tiles
+function ageDays(isoDate){ return -daysFromToday(isoDate); }
+function staleTag(isoDate){
+  const a=ageDays(isoDate);
+  return a>STALE_DAYS?`<div class="signal-stale" title="Not checked in ${a} days — flag for review">⚠ ${a}d old · needs check</div>`:`<div class="signal-asof">as of ${isoDate}</div>`;
+}
+
+function renderSignalBar(){
+  const el=document.getElementById('signal-bar');
+  if(!el)return;
+  el.innerHTML=SIGNALS.map(s=>`
+    <div class="signal" title="Click to filter Intelligence Feed" onclick="clickSignal('${s.cat}','${s.region}')">
+      <div class="signal-label">${s.label}</div>
+      <div class="signal-value ${s.cls}">${s.value}</div>
+      <div class="signal-sub">${s.sub}</div>
+      ${staleTag(s.asOf)}
+    </div>`).join('');
+}
+
+// ── CONTEXTUAL RIGHT RAIL — swaps its module stack per tab (overview / companies / tenders).
+// Built entirely from data already in the file (WATCHLIST, NEWS, SNAPSHOT, TENDERS). Other tabs
+// show no rail (Daily Feed keeps its left filters; Events is already the forward calendar).
+function renderRightPanel(){
+  const el=document.getElementById('rightpanel');if(!el)return;
+  let html='';
+  // Today's Pulse renders full-width (no right rail) — removed by design so the brief isn't cramped.
+  if(VIEW==='companies')html=rpCompanyWatch()+rpReportsDue();
+  else if(VIEW==='tenders')html=rpPipeline()+rpPortals();
+  el.innerHTML=html;
+}
+function rpCompanyWatch(){
+  return`<div class="rp-section"><div class="rp-head">👁 Company Watch</div>`+SNAPSHOT.map(s=>`<div class="signal-mini"><span class="sm-label">${s.label}</span><span class="sm-val ${s.cls}">${s.value}</span></div>`).join('')+`</div>`;
+}
+function rpReportsDue(){
+  const pubs=WATCHLIST.map(w=>({...w,d:daysFromToday(w.targetIso)})).filter(w=>/publication/i.test(w.type)).sort((a,b)=>a.d-b.d);
+  if(!pubs.length)return'';
+  return`<div class="rp-section"><div class="rp-head">📄 Reports Due</div>`+pubs.map(w=>`<div class="watch-item" style="cursor:default;"><span class="watch-dot"></span><span class="watch-text">${w.title}<span class="watch-when">In ${w.d} days</span></span></div>`).join('')+`</div>`;
+}
+function rpPipeline(){
+  const nrst=[...TENDERS].sort((a,b)=>new Date(a.deadline)-new Date(b.deadline))[0];
+  return`<div class="rp-section"><div class="rp-head">🎯 Pipeline</div><div class="signal-mini"><span class="sm-label">Open tenders</span><span class="sm-val">${TENDERS.length}</span></div>`+(nrst?`<div class="signal-mini"><span class="sm-label">Nearest close</span><span class="sm-val warn">${nrst.deadline}</span></div>`:'')+`</div>`;
+}
+function rpPortals(){
+  const L=[['Find a Tender','https://www.find-tender.service.gov.uk','UK'],['GeM (India)','https://gem.gov.in','IN'],['TED — EU','https://ted.europa.eu','EU'],['AusTender','https://www.tenders.gov.au','AU'],['CanadaBuys','https://canadabuys.canada.ca/en','CA']];
+  return`<div class="rp-section"><div class="rp-head">🔗 Search Portals</div><div class="src-group">`+L.map(l=>`<a class="src-link" href="${l[1]}" target="_blank">${l[0]}<span class="src-tier">${l[2]}</span></a>`).join('')+`</div></div>`;
+}
+
+function renderWatchlist(){
+  const vis=WATCHLIST.map(w=>({...w,daysLeft:daysFromToday(w.targetIso)}))
+    .filter(w=>!Q||(w.title+w.note+w.type).toLowerCase().includes(Q.toLowerCase()))
+    .sort((a,b)=>a.daysLeft-b.daysLeft);
+  if(!vis.length)return'';
+  return vis.map((w,i)=>{
+    const d=w.daysLeft;
+    const dlc=d<0?'days-past':d<=14?'days-soon':d<=60?'days-coming':'days-upcoming';
+    const dlt=d<0?`${Math.abs(d)} days ago`:d===0?'Today':`In ${d} days`;
+    return`<div class="watch-card" style="animation-delay:${i*.05}s" onclick="clickSignal('${w.filterCat}','${w.filterRegion}')" title="Click to filter Intelligence Feed">
+      <div class="event-meta">
+        <span class="event-type watch-type">${w.type}</span>
+        <span class="tender-region">${w.filterRegion}</span>
+        <span class="days-badge ${dlc}" style="margin-left:auto;">${dlt}</span>
+      </div>
+      <h3>${w.title}</h3>
+      <p class="edesc">${w.note}</p>
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  renderSignalBar();
+  const pg=document.getElementById('page');
+  if(pg){pg.classList.remove('layout-filters','layout-rail','layout-plain');pg.classList.add(VIEW==='news'?'layout-filters':(VIEW==='companies'||VIEW==='tenders')?'layout-rail':'layout-plain');}
+  renderRightPanel();
+  const vis=NEWS.filter(matchNews);
+  const liveNews=NEWS.filter(inWindow); // in-window base for all counts (mirrors the FLOOR filter)
+
+  // update counts
+  ['policy','admissions','studyabroad','scholarships','rankings','workrights','tuition','testing','partnerships','tech','innovation'].forEach(c=>{
+    const el=document.getElementById('nc-'+c);if(el)el.textContent=liveNews.filter(n=>n.cat===c).length;
+  });
+  const nca=document.getElementById('nc-all');if(nca)nca.textContent=liveNews.length;
+  ['high','med','low'].forEach(i=>{const el=document.getElementById('ni-'+i);if(el)el.textContent=liveNews.filter(n=>n.impact===i).length;});
+  const nia=document.getElementById('ni-all');if(nia)nia.textContent=liveNews.length;
+  const tcn=document.getElementById('tc-news');if(tcn)tcn.textContent=liveNews.length;
+  const tci=document.getElementById('tc-industry');if(tci)tci.textContent=CO_STATUS.length;
+  const tct=document.getElementById('tc-tenders');if(tct)tct.textContent=TENDERS.length;
+  const tci2=document.getElementById('tc-india');if(tci2)tci2.textContent=NEWS.filter(n=>inWindow(n)&&isIndia(n)).length;
+
+  const feed=document.getElementById('feed');
+  const lbl=document.getElementById('feed-label');
+  const cnt=document.getElementById('feed-count');
+
+  const alrt=ALERT.active?`<div class="alert-strip"><span class="alert-dot"></span><span class="alert-label">⚠ Market Disruption</span><div><div class="alert-title">${ALERT.title}</div><div class="alert-verdict">${ALERT.verdict}</div></div></div>`:'';
+
+  if(VIEW==='overview'){
+    if(lbl)lbl.textContent=`Today's Pulse · ${TODAY_LABEL}`;
+    if(cnt)cnt.textContent=`${DELTA.totalStories} stories · 7-day feed`;
+    feed.innerHTML=alrt+renderOverview();
+  } else if(VIEW==='news'){
+    if(lbl)lbl.textContent=`Daily Feed · ${TODAY_LABEL}`;
+    if(cnt)cnt.textContent=`${vis.length} of ${NEWS.length} stories`;
+    feed.innerHTML=renderNews(vis);
+  } else if(VIEW==='companies'){
+    if(lbl)lbl.textContent='Industry Trend — EdTech & Pathway Operators';
+    if(cnt)cnt.textContent=`${CO_STATUS.length+PEOPLE.length} updates in last 7 days`;
+    feed.innerHTML=renderCompanyWatch();
+  } else if(VIEW==='tenders'){
+    if(lbl)lbl.textContent='Opportunities — Tenders & Regulatory Watch';
+    if(cnt)cnt.textContent=`${TENDERS.length} tenders · ${WATCHLIST.length} tracked deadlines`;
+    const nrst=[...TENDERS].sort((a,b)=>new Date(a.deadline)-new Date(b.deadline))[0];
+    const nrstNm=nrst?(nrst.issuer.match(/\(([^)]+)\)/)?.[1]||nrst.issuer):null;
+    const nrstTxt=nrst?`Nearest deadline: ${nrstNm} (${nrst.region}) closes ${nrst.deadline}`:'No open tenders';
+    feed.innerHTML=`<div class="cal-section"><div class="cal-section-head">📋 Active Tenders — Recruitment, Marketing & Admissions Contracts<span class="freq-badge freq-daily">🔄 Daily</span></div></div>`
+      +`<div class="is-block"><div class="is-card" style="border-left-color:#6366f1;"><div class="is-label">Active Tenders</div><div class="is-value warn">${TENDERS.length} Open</div><div class="is-sub">${nrstTxt}</div></div></div>`
+      +renderTenders()
+      +`<div class="cal-section" style="margin-top:6px;"><div class="cal-section-head">🔭 Regulatory & Publication Watch — deadlines and releases we're tracking<span class="freq-badge freq-daily">🔄 Daily</span></div></div>`
+      +renderWatchlist();
+  } else if(VIEW==='india'){
+    const iStories=NEWS.filter(n=>inWindow(n)&&isIndia(n));
+    if(lbl)lbl.textContent='India — Source-Market Lens';
+    if(cnt)cnt.textContent=`${iStories.length} India-relevant stories in the 7-day window`;
+    feed.innerHTML=renderIndia();
+  } else if(VIEW==='sources'){
+    if(lbl)lbl.textContent='Sources & Data — Editorial Registry';
+    if(cnt)cnt.textContent='67 sources · Tier 1–3 + Advisory + Associations + Data + Procurement';
+    feed.innerHTML=renderSources();
+  }
+}
+// ── DISRUPTION ALERT — set active:true ONLY for genuine market-breaking events ──
+const ALERT={active:true,asOf:'2026-08-06',title:'DHS F-1/J-1 rule now has a hard effective date: September 15, 2026',verdict:'DSOs have about five and a half weeks (Sept 15 is ~5.5 weeks out) to build a working Extension-of-Stay filing pipeline; institutions that miss the window risk students falling out of status. Compliance spend, not just enrollment softening, is now the near-term cost.'};
+
+// ── MARKET STATE SIGNALS — checked every daily run against NEWS; each carries its own
+// asOf date so the tile is self-honest about staleness even if a day's run doesn't touch it.
+// STALE_DAYS below controls when a tile flags itself as needing a check.
+const STALE_DAYS=7;
+// SIGNALS drives BOTH the top signal bar AND the India tab's live signal tiles.
+// Any signal that hits India disproportionately gets india:true + an indiaSub (the
+// India-specific angle shown on the India tab). Set these when adding a signal each
+// run — the India tab derives its tiles from SIGNALS.filter(india), so an unflagged
+// India-relevant signal silently won't appear there.
+const SIGNALS=[
+  {label:'US OPT Fee',value:'$100K',cls:'neg',sub:'proposal only — DHS says nothing final (Aug 3)',asOf:'2026-08-04',cat:'workrights',region:'US',india:true,indiaSub:'would hit Indian STEM graduates on OPT hardest'},
+  {label:'India Campuses',value:'Live',cls:'warn',sub:'Australian unis open India branches (Flinders, Victoria)',asOf:'2026-07-30',cat:'partnerships',region:'Asia',india:true,indiaSub:'onshore international route as outbound tightens'},
+  {label:'Africa Visa Hubs',value:'Live',cls:'warn',sub:'~25 African cities now on regional US hubs',asOf:'2026-08-02',cat:'policy',region:'Africa'},
+];
+
+// ── INDUSTRY SNAPSHOT — same rotating-tile model as SIGNALS above: populated
+// from whatever real, verified company/market data exists right now, NOT a
+// fixed set of permanently-assigned slots. A prior version of this had three
+// hardcoded keys (idp/distress/ma) — the exact anti-pattern the SIGNALS
+// section above warns against — which is why "Industry Distress: 0" and
+// "M&A Activity: 0" sat here indefinitely: there was nothing to report, but
+// the fixed slot stayed and just re-stamped its date. Fixed Jul 27, 2026: this
+// is now an array; each tile only exists because a real, dated, verified fact
+// backs it. A quiet week means fewer tiles, not padded ones.
+const SNAPSHOT=[
+  {label:'Shorelight / INTO University',value:'Exposed',cls:'warn',sub:'pathway-provider partners exposed to the Sept 15 DHS rule and the newly-proposed $100k OPT fee — both hit their US post-study-work pitch',asOf:'2026-08-02'},
+  {label:'Kaplan Languages',value:'Rebrand',cls:'',sub:'rebranding to "Positively Languages" under new PE owner Inspirit Capital — consolidates Kaplan Intl Languages, Alpadia + Azurlingua (verified: PIE, StudyTravel, Kaplan press)',asOf:'2026-08-02'},
+];
+
+// TODAY_LABEL is the single source of truth for "today's" display date — every
+// on-screen label showing today's date must reference this constant, never a
+// literal string. This is distinct from DELTA_BRIEFING (which intentionally
+// lags one step behind — see DELTA_BRIEFING SEQUENCING rule above). Update
+// this ONE line each run; everything else follows automatically.
+const TODAY_LABEL='Aug 6, 2026';
+// FLOOR — the 7-day rolling window, auto-derived from TODAY_LABEL (today − 7 days).
+// Safety net: any story older than FLOOR is filtered out of every view and count, even
+// if a run forgot to purge it, so nothing older than 7 days can ever render. Manual
+// purging still trims the NEWS array so it doesn't grow unbounded and so indices stay
+// tidy — this just guarantees the display can never show a stale item. FLOOR moves
+// automatically each run when TODAY_LABEL is updated; no separate date to maintain.
+const FLOOR=new Date(new Date(TODAY_LABEL).getTime()-7*864e5);
+function inWindow(n){return new Date(n.date)>=FLOOR;}
+const DELTA_BRIEFING='Aug 5, 2026';
+const DELTA={
+  date:TODAY_LABEL,
+  // Computed from NEWS (in-window only) so the delta stats can never drift from the actual feed.
+  newStories:NEWS.filter(n=>inWindow(n)&&new Date(n.date)>new Date(DELTA_BRIEFING)).length,
+  highImpact:NEWS.filter(n=>inWindow(n)&&n.impact==='high').length,
+  totalStories:NEWS.filter(inWindow).length,
+  movements:[
+    {cat:'Post-Study Work',dir:'down',note:'Trump administration weighing a $100,000 fee on OPT post-study work — a proposal, but potentially more damaging to US inbound than the Sept 15 duration rule already in force.'},
+    {cat:'Policy',dir:'down',note:'Two Aug 1 changes now in effect: France\'s higher €877.50 student proof-of-funds threshold, and US F/J visa services in ~25 African cities realigned to regional hubs.'},
+    {cat:'Study Abroad',dir:'up',note:'Alternatives keep gaining as the US tightens — New Zealand pitching its own growth and Australian universities opening India campuses (Flinders, Victoria).'},
+  ],
+  note:`vs. ${DELTA_BRIEFING} briefing`
+};
+
+const CO_STATUS=[
+  ];
+
+// ── PEOPLE MOVES — CXO tracker for EdTech & International Education (7-day rolling, like NEWS) ──
+const PEOPLE=[
+];
+
+// ── REPORTS PUBLISHED — major research/report drops from tracked orgs (7-day rolling, like NEWS). Shape: {title,org,date,url,note} ──
+const REPORTS=[
+  // Language Trends England 2026 (British Council, Jul 22) purged Jul 30 run — aged past the Jul 23 7-day floor. No newer tracked-org report in-window; honest empty state until one lands.
+];
+
+// ── RENDER FUNCTIONS ─────────────────────────────────────────
+function renderOverview(){
+  // Rolling "since your last briefing" — NOT a strict calendar day. Filtering on the previous-briefing
+  // date (not today's IST date) means US/UK stories in the ~12h timezone gap are never dropped between runs.
+  const allStories=NEWS.map((n,i)=>({...n,idx:i})).filter(inWindow); // idx stays original; aged items dropped
+  let topList=allStories.filter(n=>new Date(n.date)>new Date(DELTA_BRIEFING));
+  let topHead='New since your last briefing — click to jump';
+  if(!topList.length){
+    // Nothing new since last check — surface the 3 most recent instead, clearly labelled.
+    topList=allStories.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
+    topHead='Nothing new since your last briefing — most recent (7-day view on Daily Feed)';
+  }
+  const topStoriesHtml=topList.map(s=>`
+    <div class="ts-item" onclick="jumpToStory('${s.id}')" title="Jump to full story">
+      <span class="impact-dot ts-dot dot-${s.impact}"></span>
+      <div class="ts-body"><div class="ts-title">${s.title}</div><div class="ts-meta">${CAT[s.cat]||s.cat} · ${s.region} · ${s.date}</div></div>
+    </div>`).join('');
+  return`<div class="ov-wrap">
+    <div class="why-today">
+      <span class="why-today-label">⚡ Why Today Matters — ${TODAY_LABEL}<span class="freq-badge freq-daily">🔄 Daily</span></span>
+      <span class="why-today-text">A genuinely quiet stretch: no new hard policy has broken since the late-July cluster, so the strict 7-day window has thinned the feed to its two still-live threads — the $100,000 OPT fee proposal and the India onshore-campus roll-out. The whole Jul 29 batch (Canada's ~83% arrivals collapse, the UK's record UCAS cycle, the 14% US ELT drop, New Zealand's growth pitch, the UK teaching-grant cut) aged past the window this run; those remain the structural backdrop but are no longer "this week's news." The dominant watch item stays the OPT fee: still only a proposal (DHS said on 3 Aug that nothing is final), but India is the single most exposed market — Indians were ~48% of new STEM OPT authorisations in 2024. It sits on top of the Sept 15 duration-of-status rule, now ~5.5 weeks out. The parallel DHS H-1B reform rule is still expected in August but unpublished — now tracked on the watchlist.</span>
+    </div>
+    <div class="ts-block">
+      <div class="ts-head"><span>${topHead}</span><a class="ts-viewall" href="#" onclick="setView('news',document.querySelector('[data-view=news]'));return false;">VIEW FULL FEED →</a></div>
+      ${topStoriesHtml}
+    </div>
+    <div class="exec-priorities">
+      <div class="ep-head">⚡ Executive Priorities Today<span class="freq-badge freq-daily">🔄 Daily</span></div>
+      <div class="ep-grid">
+        <div class="ep-item ep-critical" onclick="jumpToStory('opt-100k')" style="cursor:pointer;" title="Jump to source story"><span class="ep-dot">🔴</span><span class="ep-text">Add the proposed $100k OPT fee to US-bound client risk conversations now as a downside case — flag it's a proposal, not law, and lean into post-study-work certainty elsewhere (Canada PR, UK Graduate Route)</span></div>
+        <div class="ep-item ep-high" onclick="jumpToStory('opt-100k')" style="cursor:pointer;" title="Jump to source story"><span class="ep-dot">🟠</span><span class="ep-text">India is the single most exposed market on the OPT fee — Indians were ~48% of new STEM OPT authorisations in 2024 (Open Doors); lead with that in India-to-US risk conversations</span></div>
+        <div class="ep-item ep-high" onclick="jumpToStory('flinders-india')" style="cursor:pointer;" title="Jump to source story"><span class="ep-dot">🟢</span><span class="ep-text">Track both India campuses (Flinders Bengaluru LoI, Victoria Gurugram approval) as live India-inbound campus opportunities</span></div>
+      </div>
+    </div>
+    <div class="notd-bar">
+      <span class="notd-label">📊 Number of the Day<span class="freq-badge freq-daily">🔄 Daily</span></span>
+      <span class="notd-number">$100K</span>
+      <span class="notd-desc">The fee the Trump administration is weighing on OPT post-study work — it would price most of the ~419,000 international graduates on OPT out of working in the US after their degree. Still a proposal, not yet law.</span>
+    </div>
+    <div style="font-size:.65rem;color:#9ca3af;text-align:right;padding-top:4px;">Rolling brief: “new” = published since your last check, dated by each source’s own (≈UTC) date — so US/UK items in the ~12h timezone gap are never dropped between runs · 7-day feed · weekly Sector Status</div>
+  </div>`;
+}
+
+function renderCompanyWatch(){
+  const visC=CO_STATUS.filter(c=>!Q||(c.name+c.signal+c.evidence).toLowerCase().includes(Q.toLowerCase()));
+  const cards=visC.map((c,i)=>`
+    <div class="pm-card" style="animation-delay:${i*.04}s">
+      <div class="pm-head">
+        <div class="pm-name">${c.name}</div>
+        <span class="cw-status ${c.cls}">${c.status}</span>
+      </div>
+      <div class="pm-role">📡 ${c.signal}</div>
+      <div class="pm-co">${c.ticker}</div>
+      <div class="pm-note">${c.evidence}</div>
+      ${c.insight?`<div class="insight-block"><div class="ins-label">💡 Why it matters for you</div><p>${c.insight}</p>${c.action?`<span class="action">✓ ${c.action}</span>`:''}</div>`:''}
+      <div class="pm-date">As of ${c.date}</div>
+    </div>`).join('');
+  const visP=PEOPLE.filter(p=>!Q||(p.name+p.role+p.company+p.note).toLowerCase().includes(Q.toLowerCase()));
+  const moves=visP.map((p,i)=>`
+    <div class="pm-card" style="animation-delay:${i*.04}s">
+      <div class="pm-head">
+        <div class="pm-name">${p.name}</div>
+        <span class="pm-move pm-${p.type}">${p.typeLabel}</span>
+      </div>
+      <div class="pm-role">${p.role}</div>
+      <div class="pm-co">${p.company}</div>
+      <div class="pm-note">${p.note}</div>
+      <div class="pm-date">${p.date}</div>
+    </div>`).join('');
+  const cEmpty=Q?'No companies match your search.':'No company health changes in the last 7 days. This section only shows genuinely recent signal — check back tomorrow, or see Sources for the full tracked list.';
+  const pEmpty=Q?'No people moves match your search.':'No executive moves in the last 7 days. This section only shows genuinely recent signal — check back tomorrow.';
+  const visR=REPORTS.filter(r=>!Q||(r.title+r.org+(r.note||'')).toLowerCase().includes(Q.toLowerCase()));
+  const reportCards=visR.map(r=>`<a class="report-card" href="${r.url}" target="_blank">
+      <div class="report-title">${r.title}</div>
+      <div class="report-meta">${r.org} · ${r.date}${r.note?' · '+r.note:''}</div>
+    </a>`).join('');
+  const rEmpty=Q?'No reports match your search.':'No major reports published in the last 7 days from tracked organizations (QS, THE, UNESCO, OECD, British Council, NAFSA, ICEF, Deloitte, HolonIQ, National Student Clearinghouse).';
+  const snapshotCards=SNAPSHOT.map((s,i)=>`<div class="is-card"${i===0?'':' style="border-left-color:#9ca3af;"'}><div class="is-label">${s.label}</div><div class="is-value ${s.cls}">${s.value}</div><div class="is-sub">${s.sub}</div>${staleTag(s.asOf)}</div>`).join('');
+  return`<div class="cal-section"><div class="cal-section-head">📊 Industry Snapshot<span class="freq-badge freq-daily">🔄 Daily</span></div></div>
+    <div class="is-block">${snapshotCards}
+    </div>
+    <div class="cal-section"><div class="cal-section-head">📄 Reports Published — ${REPORTS.length} recent (7-day)<span class="freq-badge freq-daily">🔄 Daily</span></div></div>
+    <div style="padding:0 16px 4px;">${visR.length?reportCards:`<div class="empty-msg">${rEmpty}</div>`}</div>
+    <div class="cal-section"><div class="cal-section-head">🏢 Company Health — ${CO_STATUS.length} recent (7-day)<span class="freq-badge freq-daily">🔄 Daily</span></div></div>
+    <div class="pm-grid">${visC.length?cards:`<div class="empty-msg">${cEmpty}</div>`}</div>
+    <div class="cal-section" style="margin-top:4px;"><div class="cal-section-head">👥 Executive Moves — EdTech & International Education<span class="freq-badge freq-daily">🔄 Daily</span></div></div>
+    <div class="pm-grid">${visP.length?moves:`<div class="empty-msg">${pEmpty}</div>`}</div>`;
+}
+
+// ── FEATURE: AI card toggle ──────────────────────────────────
+
+// India lens: a story is India-relevant if flagged india:true (for India-load-bearing stories
+// that don't literally name India, e.g. OPT) OR if it mentions India/Indian anywhere in its text.
+function isIndia(n){return n.india===true||/\bindia/i.test((n.title||'')+' '+(n.summary||'')+' '+(n.insight||'')+' '+(n.action||''));}
+function renderIndia(){
+  const cut=new Date(DELTA_BRIEFING);
+  const stories=NEWS.map((n,i)=>({...n,idx:i})).filter(n=>inWindow(n)&&isIndia(n)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const fresh=stories.filter(s=>new Date(s.date)>cut);
+  // PRIME FOCUS — rolling "since your last briefing" lead, same model as Top Stories.
+  const lead=fresh.length
+    ? `<div class="india-lead"><div class="india-lead-h">🔴 New for India since your last briefing (${DELTA_BRIEFING})</div>`+fresh.map(s=>`<div class="india-lead-item" onclick="jumpToStory('${s.id}')" title="Jump to full story"><span class="new-pill">NEW</span><b>${s.title}</b><div class="il-meta">${CAT[s.cat]||s.cat} · ${s.region} · ${s.date}</div></div>`).join('')+`</div>`
+    : `<div class="india-lead quiet"><div class="india-lead-h">🟢 No new India-specific story since your last briefing (${DELTA_BRIEFING})</div><div class="il-quiet">The standing picture below is unchanged this run — ${stories.length} India-relevant stories remain live in the 7-day window. India-tagged signals refresh automatically as the main feed rolls.</div></div>`;
+  // ROLLING SIGNALS — derived from the live SIGNALS array (india-flagged tiles), not a static copy.
+  const isig=SIGNALS.filter(s=>s.india);
+  const statHtml=`<div class="india-sub">India-relevant market signals (live) · tap any to open its source story →</div><div class="india-stat">`+isig.map(x=>`<div class="is-card is-click" onclick="clickSignal('${x.cat}','${x.region}')" title="Open the source story for this number in the Daily Feed"><div class="is-label">${x.label}</div><div class="is-value ${x.cls}">${x.value}</div><div class="is-sub">${x.indiaSub||x.sub}</div></div>`).join('')+`</div>`;
+  // INDIA IN THE FEED — rolling, NEW badge on stories newer than the last briefing.
+  const feedHtml=`<div class="cal-section" style="margin-top:6px;"><div class="cal-section-head">📰 India in the Feed — ${stories.length} relevant stories (auto-filtered from the 7-day feed)</div></div>`+(stories.length?stories.map(s=>`<div class="ts-item" style="padding:9px 16px;border-bottom:1px solid #ede9e4;cursor:pointer;background:#fff;" onclick="jumpToStory('${s.id}')" title="Jump to full story"><span class="impact-dot dot-${s.impact}" style="margin-right:6px;"></span>${new Date(s.date)>cut?'<span class="new-pill">NEW</span>':''}<span class="ts-title" style="font-size:.8rem;">${s.title}</span><div class="ts-meta">${CAT[s.cat]||s.cat} · ${s.region} · ${s.date}</div></div>`).join(''):`<div class="empty-msg">No India-tagged stories in the current 7-day feed.</div>`);
+  const intro=`<div style="padding:14px 16px 0;"><div class="why-today"><span class="why-today-label">🇮🇳 India — source-market lens</span><span class="why-today-text">India is the world's largest student-source market, so it feels every destination's tightening first. This tab rolls with the 7-day feed: what's newly moved for India, the India-relevant market signals, and every India-tagged story currently live.</span></div></div>`;
+  return intro+lead+statHtml+feedHtml;
+}
+function renderSources(){
+  return`<div class="src-view-wrap">
+    <div>
+      <div class="src-view-head">Must-Read Sources<span class="freq-badge" style="background:#e5e7eb;color:#4b5563;">📋 Reference — edited as needed, not part of the daily scan output</span></div>
+      <div class="src-group" style="border-left:3px solid #f0a500;background:#fffdf5;">
+        <div class="src-group-head">🔁 Scan Cadence Protocol</div>
+        <div style="font-size:.62rem;color:#4b5563;line-height:1.5;margin-bottom:5px;">Not every source every run. Sources are tiered by how often they actually publish &times; strategic weight, so fast/important ones get read every run and slow ones don't burn the budget re-confirming "nothing new."</div>
+        <div style="font-size:.64rem;color:#374151;line-height:1.65;">
+          <b style="color:#15803d;">Tier A — every run:</b> USCIS · IRCC · PIE News · ICEF Monitor · <b>India: UGC · AICTE · Times of India · Careers360 · Shiksha · HT Education</b><br>
+          <b style="color:#d97706;">Tier B — weekly, 3 rotating groups:</b> trade press + gov portals (THE, Inside Higher Ed, UKVI, Home Affairs AU, Business Standard, The Hindu…). ~3-week full cycle.<br>
+          <b style="color:#6d28d9;">Tier C — monthly, 3 rotating groups:</b> slow data &amp; advisory (HESA, OECD, UNESCO, Big-4/MBB, rankings, associations). ~3-month cycle.<br>
+          <b style="color:#0369a1;">Event-triggered:</b> budgets, ranking releases, IIE Open Doors, HESA annual, intake starts — checked when the date is near.
+        </div>
+        <div style="font-size:.6rem;color:#9ca3af;margin-top:6px;">Cursor · week of Aug 2, 2026 → Tier B: <b>B1</b> · Tier C: <b>C1</b></div>
+      </div>
+      <div class="src-group"><div class="src-group-head">🇮🇳 India — Source-Market (Tier A · every run)</div>
+        <a class="src-link" href="https://www.ugc.gov.in" target="_blank">UGC Notifications<span class="src-tier">IN Gov</span></a>
+        <a class="src-link" href="https://www.aicte-india.org" target="_blank">AICTE<span class="src-tier">IN Gov</span></a>
+        <a class="src-link" href="https://timesofindia.indiatimes.com/education" target="_blank">Times of India — Education<span class="src-tier">IN Media</span></a>
+        <a class="src-link" href="https://news.careers360.com" target="_blank">Careers360<span class="src-tier">IN Ed Media</span></a>
+        <a class="src-link" href="https://www.shiksha.com/news" target="_blank">Shiksha<span class="src-tier">IN Ed Media</span></a>
+        <a class="src-link" href="https://www.hindustantimes.com/education" target="_blank">Hindustan Times — Education<span class="src-tier">IN Media</span></a>
+      </div>
+      <div class="src-group"><div class="src-group-head">🟢 Official (T1)</div>
+        <a class="src-link" href="https://www.nafsa.org" target="_blank">NAFSA<span class="src-tier">Gov/Assoc</span></a>
+        <a class="src-link" href="https://educationusa.state.gov" target="_blank">EducationUSA<span class="src-tier">US Gov</span></a>
+        <a class="src-link" href="https://www.canada.ca/en/immigration-refugees-citizenship" target="_blank">IRCC Canada<span class="src-tier">CA Gov</span></a>
+        <a class="src-link" href="https://travel.state.gov" target="_blank">US State Dept<span class="src-tier">US Gov</span></a>
+        <a class="src-link" href="https://www.britishcouncil.org/education" target="_blank">British Council<span class="src-tier">UK Gov</span></a>
+        <a class="src-link" href="https://www.ukcisa.org.uk" target="_blank">UKCISA<span class="src-tier">UK Assoc</span></a>
+        <a class="src-link" href="https://opendoorsdata.org" target="_blank">IIE Open Doors<span class="src-tier">US Gov</span></a>
+        <a class="src-link" href="https://uis.unesco.org" target="_blank">UNESCO Stats<span class="src-tier">Intl</span></a>
+        <a class="src-link" href="https://www.oecd.org/education/education-at-a-glance" target="_blank">OECD Ed at a Glance<span class="src-tier">Intl</span></a>
+        <a class="src-link" href="https://www.acenet.edu" target="_blank">ACE<span class="src-tier">US Assoc</span></a>
+        <a class="src-link" href="https://www.studentclearinghouse.org" target="_blank">National Student Clearinghouse<span class="src-tier">US Data</span></a>
+        <a class="src-link" href="https://www.aacsb.edu" target="_blank">AACSB<span class="src-tier">Assoc</span></a>
+        <a class="src-link" href="https://education.austrade.gov.au" target="_blank">Austrade EDI<span class="src-tier">AU Gov</span></a>
+        <a class="src-link" href="https://www.gov.uk/government/organisations/uk-visas-immigration" target="_blank">GOV.UK — UKVI<span class="src-tier">UK Gov</span></a>
+        <a class="src-link" href="https://www.uscis.gov" target="_blank">USCIS<span class="src-tier">US Gov</span></a>
+        <a class="src-link" href="https://immi.homeaffairs.gov.au" target="_blank">Home Affairs (AU)<span class="src-tier">AU Gov</span></a>
+        <a class="src-link" href="https://www.universitiesuk.ac.uk/universities-uk-international" target="_blank">Universities UK Intl (UUKi)<span class="src-tier">UK Assoc</span></a>
+      </div>
+      <div class="src-group"><div class="src-group-head">🔵 Industry Press (T2)</div>
+        <a class="src-link" href="https://thepienews.com" target="_blank">The PIE News<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://monitor.icef.com" target="_blank">ICEF Monitor<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://www.timeshighereducation.com" target="_blank">Times Higher Ed<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://www.insidehighered.com" target="_blank">Inside Higher Ed<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://www.universityworldnews.com" target="_blank">University World News<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://www.highereddive.com" target="_blank">Higher Ed Dive<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://www.chronicle.com" target="_blank">Chronicle of HE<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://studytravel.network" target="_blank">StudyTravel Network<span class="src-tier">Trade</span></a>
+        <a class="src-link" href="https://wenr.wes.org" target="_blank">WENR (WES)<span class="src-tier">Analysis</span></a>
+        <a class="src-link" href="https://www.studyportals.com" target="_blank">Studyportals<span class="src-tier">Analytics</span></a>
+      </div>
+      <div class="src-group"><div class="src-group-head">🟡 Media & Analysis (T3)</div>
+        <a class="src-link" href="https://www.bloomberg.com/education" target="_blank">Bloomberg<span class="src-tier">Media</span></a>
+        <a class="src-link" href="https://www.reuters.com/world/education" target="_blank">Reuters Education<span class="src-tier">Media</span></a>
+        <a class="src-link" href="https://www.ft.com/education" target="_blank">Financial Times<span class="src-tier">Media</span></a>
+        <a class="src-link" href="https://www.qs.com/insights" target="_blank">QS Insights<span class="src-tier">Analysis</span></a>
+        <a class="src-link" href="https://www.usnews.com/best-colleges" target="_blank">US News Rankings<span class="src-tier">Analysis</span></a>
+        <a class="src-link" href="https://www2.deloitte.com/us/en/industries/education.html" target="_blank">Deloitte Education<span class="src-tier">Analysis</span></a>
+        <a class="src-link" href="https://www.holoniq.com" target="_blank">HolonIQ<span class="src-tier">Analysis</span></a>
+        <a class="src-link" href="https://www.shanghairanking.com" target="_blank">Shanghai Ranking (ARWU)<span class="src-tier">Rankings</span></a>
+        <a class="src-link" href="https://www.hepi.ac.uk" target="_blank">HEPI<span class="src-tier">UK HE policy</span></a>
+      </div>
+      <div class="src-group"><div class="src-group-head">🟤 Strategic Advisory (Big 4 / MBB)</div>
+        <div style="font-size:.62rem;color:#9ca3af;margin:-1px 0 5px;line-height:1.4;">Early-signal market intelligence, often ahead of trade press. Treat data as high-confidence; read recommendations as the firm's own positioning. (Deloitte's education practice is listed under Media &amp; Analysis.)</div>
+        <a class="src-link" href="https://www.mckinsey.com/industries/education" target="_blank">McKinsey — Education<span class="src-tier">Advisory</span></a>
+        <a class="src-link" href="https://www.ey.com/en_gl/services/ey-parthenon" target="_blank">EY-Parthenon<span class="src-tier">Advisory</span></a>
+        <a class="src-link" href="https://www.bcg.com/industries/education" target="_blank">BCG — Education<span class="src-tier">Advisory</span></a>
+        <a class="src-link" href="https://www.bain.com" target="_blank">Bain &amp; Company<span class="src-tier">Advisory</span></a>
+        <a class="src-link" href="https://kpmg.com" target="_blank">KPMG<span class="src-tier">Advisory</span></a>
+        <a class="src-link" href="https://www.lek.com" target="_blank">L.E.K. Consulting<span class="src-tier">Advisory</span></a>
+        <a class="src-link" href="https://www.strategyand.pwc.com" target="_blank">Strategy&amp; (PwC)<span class="src-tier">Advisory</span></a>
+      </div>
+      <div class="src-group"><div class="src-group-head">🏛 Sector Associations</div>
+        <div style="font-size:.62rem;color:#9ca3af;margin:-1px 0 5px;line-height:1.4;">Peak bodies that signal sector-wide policy positions, often ahead of individual institutions. (NAFSA, ACE, AACSB, UUKi are listed under Official.)</div>
+        <a class="src-link" href="https://www.nacacnet.org" target="_blank">NACAC<span class="src-tier">US Assoc</span></a>
+        <a class="src-link" href="https://www.aacrao.org" target="_blank">AACRAO<span class="src-tier">US Assoc</span></a>
+        <a class="src-link" href="https://www.eaie.org" target="_blank">EAIE<span class="src-tier">EU Assoc</span></a>
+        <a class="src-link" href="https://universitiesaustralia.edu.au" target="_blank">Universities Australia<span class="src-tier">AU Assoc</span></a>
+        <a class="src-link" href="https://univcan.ca" target="_blank">Universities Canada<span class="src-tier">CA Assoc</span></a>
+      </div>
+      <div class="src-group"><div class="src-group-head">📊 Statistical &amp; Sector Data</div>
+        <div style="font-size:.62rem;color:#9ca3af;margin:-1px 0 5px;line-height:1.4;">Primary quantitative datasets — publish on a lag, best for corroborating a trend, not breaking news. (UNESCO, OECD and IIE Open Doors under Official are the global equivalents.)</div>
+        <a class="src-link" href="https://nces.ed.gov/ipeds" target="_blank">NCES / IPEDS<span class="src-tier">US Data</span></a>
+        <a class="src-link" href="https://www.hesa.ac.uk" target="_blank">HESA<span class="src-tier">UK Data</span></a>
+        <a class="src-link" href="https://www.statcan.gc.ca" target="_blank">Statistics Canada<span class="src-tier">CA Data</span></a>
+      </div>
+      <div class="src-group"><div class="src-group-head">🟣 Procurement / Tender Portals</div>
+        <div style="font-size:.62rem;color:#9ca3af;margin:-1px 0 5px;line-height:1.4;">Feeds the Tenders tab's tiered global sweep — recruitment, marketing &amp; admissions contracts only. Every candidate deadline is direct-fetch verified before listing.</div>
+        <a class="src-link" href="https://www.find-tender.service.gov.uk" target="_blank">Find a Tender<span class="src-tier">UK Gov</span></a>
+        <a class="src-link" href="https://www.contractsfinder.service.gov.uk" target="_blank">Contracts Finder<span class="src-tier">UK Gov · below-threshold</span></a>
+        <a class="src-link" href="https://www.tenders.gov.au" target="_blank">AusTender<span class="src-tier">AU Gov</span></a>
+        <a class="src-link" href="https://canadabuys.canada.ca/en" target="_blank">CanadaBuys<span class="src-tier">CA Gov</span></a>
+        <a class="src-link" href="https://www.merx.com" target="_blank">MERX<span class="src-tier">CA Aggregator</span></a>
+        <a class="src-link" href="https://www.biddingo.com" target="_blank">Biddingo<span class="src-tier">CA Aggregator</span></a>
+        <a class="src-link" href="https://ted.europa.eu" target="_blank">TED — EU Tenders<span class="src-tier">EU Gov</span></a>
+        <a class="src-link" href="https://www.etenders.gov.ie" target="_blank">eTenders Ireland<span class="src-tier">IE Gov</span></a>
+        <a class="src-link" href="https://www.gebiz.gov.sg" target="_blank">GeBIZ<span class="src-tier">SG Gov</span></a>
+        <a class="src-link" href="https://gem.gov.in" target="_blank">GeM (India)<span class="src-tier">IN Gov</span></a>
+        <a class="src-link" href="https://eprocure.gov.in/cppp" target="_blank">CPPP (India)<span class="src-tier">IN Gov</span></a>
+        <a class="src-link" href="https://sam.gov" target="_blank">SAM.gov<span class="src-tier">US Fed · low recruit signal</span></a>
+        <a class="src-link" href="https://www.ungm.org" target="_blank">UNGM<span class="src-tier">UN · dev projects</span></a>
+        <a class="src-link" href="https://tenderimpulse.com" target="_blank">TenderImpulse<span class="src-tier">Aggregator</span></a>
+        <div style="font-size:.58rem;color:#9ca3af;margin:5px 0 3px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">US university portals (examples — no central US portal for recruitment RFPs)</div>
+        <a class="src-link" href="https://procurement.psu.edu/bidding" target="_blank">Penn State — Competitive Bidding<span class="src-tier">US Univ</span></a>
+        <a class="src-link" href="https://cfo.asu.edu/bid-boards" target="_blank">Arizona State — Bid Boards<span class="src-tier">US Univ</span></a>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── FEATURE: Clickable signal bar → filter Intelligence Feed ──
+function clickSignal(cat,region){
+  setView('news',document.querySelector('[data-view="news"]'));
+  if(cat){
+    const catBtn=document.querySelector(`[data-f="cat"][data-v="${cat}"]`);
+    if(catBtn)sf('cat',cat,catBtn);
+  }
+  if(region&&region!=='all'){
+    // Only apply the region filter if a story actually exists matching BOTH cat and region —
+    // otherwise a signal tile whose underlying story doesn't have a matching region-tagged
+    // entry today would dead-end into "no stories match" even though the category itself has results.
+    const wouldMatch=NEWS.some(n=>(!cat||n.cat===cat)&&n.region===region);
+    if(wouldMatch){
+      const regBtn=document.querySelector(`[data-f="region"][data-v="${region}"]`);
+      if(regBtn)sf('region',region,regBtn);
+      else{Q=region;const inp=document.querySelector('.search-inp');if(inp)inp.value=region;render();}
+    }
+  }
+}
+
+// ── FEATURE: Impact chip → Company Watch filtered ───────────
+function filterCompany(name){
+  Q=name;
+  const inp=document.querySelector('.search-inp');
+  if(inp)inp.value=name;
+  setView('companies',document.querySelector('[data-view="companies"]'));
+}
+
+// ── Clear all filters ───────────────────────────────────────
+function clearFilters(){
+  const allCat=document.querySelector('[data-f="cat"][data-v="all"]');
+  const allReg=document.querySelector('[data-f="region"][data-v="all"]');
+  const allImp=document.querySelector('[data-f="impact"][data-v="all"]');
+  const allTrend=document.querySelector('[data-f="trend"][data-v="all"]');
+  if(allCat)sf('cat','all',allCat);
+  if(allReg)sf('region','all',allReg);
+  if(allImp)sf('impact','all',allImp);
+  if(allTrend)sf('trend','all',allTrend);
+  Q='';const inp=document.querySelector('.search-inp');if(inp)inp.value='';
+  render();
+}
+
+// ── FEATURE: Keyboard shortcuts ─────────────────────────────
+document.addEventListener('keydown',function(e){
+  // Don't intercept when typing in an input
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  const views=['overview','news','india','companies','tenders'];
+  if(e.key==='/'){ e.preventDefault(); const inp=document.querySelector('.search-inp');if(inp)inp.focus(); }
+  else if(e.key>='1'&&e.key<='5'){
+    const idx=parseInt(e.key)-1;
+    const btn=document.querySelector(`[data-view="${views[idx]}"]`);
+    if(btn)setView(views[idx],btn);
+  }
+  else if(e.key==='f'||e.key==='F'){
+    const catBtn=document.querySelector('[data-f="cat"][data-v="all"]');
+    if(catBtn)catBtn.scrollIntoView({behavior:'smooth'});
+  }
+});
+
+render();
+</script>
+</body>
+</html>

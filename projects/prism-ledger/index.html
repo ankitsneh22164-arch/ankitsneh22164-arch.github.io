@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Prism Ledger · OYO Strategic Briefing</title>
+<style>
+  :root{
+    --bg:#0d0d10; --panel:#17171b; --panel2:#1c1b1f; --line:#2b2a2f;
+    --text:#f3efe8; --muted:#96908a; --muted2:#6d6864;
+    --accent:#e2432f; --accent-soft:rgba(226,67,47,.14);
+    --gold:#c99a4d; --gold-soft:rgba(201,154,77,.14);
+    --pos:#7fae74; --pos-soft:rgba(127,174,116,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;
+    padding:30px 26px 60px;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+  .head h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:26px;letter-spacing:.2px}
+  .head h1 em{font-style:normal;color:var(--accent)}
+  .head p{color:var(--muted);font-size:12.5px;margin-top:6px;max-width:520px}
+  .stamp{color:var(--muted2);font-size:11px;text-align:right;line-height:1.7}
+  .stamp b{color:var(--muted)}
+
+  .tabs{display:flex;gap:2px;margin-bottom:30px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{color:var(--muted);padding:9px 4px;margin-right:20px;font-size:13px;font-weight:600;
+    cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--text);border-bottom-color:var(--accent)}
+  .view{display:none}.view.active{display:block;animation:f .2s ease}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .hero{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:10px}
+  .hero .num{font-family:Georgia,"Times New Roman",serif;font-size:52px;color:var(--accent);line-height:1}
+  .hero .cap{max-width:520px}
+  .hero .cap .lab{font-size:13px;color:var(--muted);font-weight:600}
+  .hero .cap .sub{font-size:13px;color:var(--muted2);margin-top:3px}
+
+  .chiprow{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 15px;flex:1;min-width:150px}
+  .chip .v{font-size:17px;font-weight:700}
+  .chip .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .chip .d{font-size:10.5px;font-weight:700;margin-top:5px;display:inline-block;padding:2px 7px;border-radius:999px}
+  .chip .d.up{color:var(--pos);background:var(--pos-soft)}
+
+  .jumprow{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+  .jumpcard{flex:1;min-width:160px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;cursor:pointer;transition:.15s}
+  .jumpcard:hover{border-color:var(--gold)}
+  .jumpcard .jt{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);margin-bottom:7px}
+  .jumpcard .jv{font-family:Georgia,"Times New Roman",serif;font-size:21px;color:var(--accent)}
+  .jumpcard .jl{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.4}
+  @media(max-width:640px){.jumprow{flex-direction:column}}
+
+  .insight{background:var(--panel2);border-left:2px solid var(--accent);border-radius:2px;
+    padding:16px 20px;font-size:13.5px;color:var(--text);margin:22px 0}
+  .insight .tag{display:block;font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--gold);
+    text-transform:uppercase;margin-bottom:8px}
+  .insight b{color:#fff}
+
+  h2.sec{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:17px;margin:30px 0 4px}
+  p.sub{color:var(--muted2);font-size:12.5px;margin:0 0 14px}
+
+  /* Story chart */
+  .chart-wrap{margin:22px 0 6px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 18px 10px}
+  .chart-wrap svg{width:100%;height:auto;display:block}
+  .cpt{font-size:10.5px;fill:var(--muted)}
+  .cyr{font-size:11px;fill:var(--text);font-weight:700}
+  .cval{font-size:12.5px;fill:var(--accent);font-weight:800}
+  .cbadge{font-size:10px;fill:var(--bg);font-weight:800}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;padding:10px 4px 2px;font-size:11px;color:var(--muted2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+  .diamond{width:8px;height:8px;background:var(--gold);display:inline-block;transform:rotate(45deg)}
+
+  .story-block{display:grid;grid-template-columns:34px 1fr;gap:14px;margin-top:22px}
+  .story-block .num-badge{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+    font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .story-block .era{font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--gold);text-transform:uppercase;margin-bottom:4px}
+  .story-block p{font-size:13.5px;color:var(--muted);margin-bottom:16px}
+  .story-block p b{color:var(--text)}
+
+  .trail{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media(max-width:640px){.trail{grid-template-columns:1fr}}
+  .tcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .tcard h4{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .tcard h4.eu{color:var(--gold)}
+  .deal{padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+  .deal:last-child{border-bottom:none}
+  .deal b{display:block;font-size:13px;color:var(--text)}
+  .deal span{color:var(--muted2);font-size:11.5px}
+
+  .bars{display:flex;align-items:flex-end;gap:26px;height:120px;padding-top:20px;margin-top:6px}
+  .bar-col{display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;width:80px}
+  .bw{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
+  .bar{width:44px;border-radius:4px 4px 0 0;background:var(--muted2);position:relative}
+  .bar.hi{background:var(--accent)}
+  .bar span{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:700;white-space:nowrap}
+  .bl{font-size:11px;color:var(--muted);text-align:center}
+
+  /* stacked mix bar */
+  .mix{margin-top:16px}
+  .mixbar{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+  .mixseg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .mixkey{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--muted)}
+  .mixkey span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+  /* donut-ish debt split */
+  .split-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;margin-top:10px;border:1px solid var(--line)}
+  .split-seg{height:100%}
+
+  .plist{margin-top:16px}
+  .prow{display:flex;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .prow:last-child{border-bottom:none}
+  .prow .pname{width:150px;flex-shrink:0;font-weight:700;font-size:13.5px}
+  .prow .pname small{display:block;font-weight:400;color:var(--muted2);font-size:11px;margin-top:2px}
+  .prow .pedge{font-size:13px;color:var(--muted);flex:1}
+
+  /* vertical milestone timeline (road to listing) */
+  .vtl{margin-top:20px;position:relative}
+  .vstep{display:flex;gap:16px;position:relative;padding-bottom:24px}
+  .vstep:last-child{padding-bottom:0}
+  .vstep::before{content:'';position:absolute;left:6px;top:20px;bottom:-4px;width:1px;background:var(--line)}
+  .vstep:last-child::before{display:none}
+  .vdotwrap{flex-shrink:0;width:13px;display:flex;justify-content:center;padding-top:3px}
+  .vdot{width:13px;height:13px;border-radius:50%;background:var(--accent);position:relative;z-index:1;
+    box-shadow:0 0 0 4px var(--bg)}
+  .vstep.pending .vdot{background:transparent;border:2px solid var(--muted2)}
+  .vstep.now .vdot{background:var(--gold);box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--gold-soft)}
+  .vbody{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+  .vstep.now .vbody{border-color:var(--gold)}
+  .vstep.pending .vbody{background:transparent;border-style:dashed}
+  .vhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  .vdate{font-size:11.5px;font-weight:800;color:var(--accent);letter-spacing:.2px}
+  .vstep.pending .vdate{color:var(--muted)}
+  .vnow-badge{font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--gold);
+    background:var(--gold-soft);border-radius:999px;padding:2px 9px}
+  .vtxt{font-size:13px;color:var(--muted);line-height:1.5}
+  .vtxt b{color:var(--text)}
+  @media(max-width:640px){.vbody{padding:10px 13px}}
+
+  /* mirror-opposite compare */
+  .mirrorrow{display:flex;align-items:stretch;gap:12px;margin:14px 0 2px}
+  .mirrorcard{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .mirrorcard .mn{font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--gold);margin-top:2px}
+  .mirrorcard .mv{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.4}
+  .mirrorvs{flex-shrink:0;align-self:center;font-size:11px;font-weight:800;color:var(--muted2);
+    width:30px;height:30px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+  @media(max-width:640px){.mirrorrow{flex-direction:column}.mirrorvs{align-self:center}}
+
+  .src{font-size:9.5px;color:var(--gold);font-weight:800;vertical-align:super;margin-left:2px;cursor:help;border-bottom:1px dotted var(--gold)}
+  .provbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px;font-size:10.5px;color:var(--muted2)}
+  .provbar span{display:inline-flex;align-items:center;gap:5px}
+  .pdotv{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted2);font-size:11px;line-height:1.9}
+  .foot a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+  .foot a:hover{color:var(--accent);border-color:var(--accent)}
+
+  .bkt{flex:1;min-width:130px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;cursor:pointer;transition:.15s}
+  .bkt:hover{border-color:var(--gold)}
+  .bkt.active{border-color:var(--accent);background:var(--accent-soft)}
+  .bkt-panel{display:none;background:var(--panel2);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px 6px;margin-top:16px}
+  .bkt-panel.active{display:block;animation:f .2s ease}
+  .bkt-panel h3{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:17px;color:var(--text);margin-bottom:2px}
+  .bkt-panel .bsub{font-size:12px;color:var(--muted2);margin-bottom:18px}
+
+  .riskgauge{display:flex;align-items:center;gap:8px;margin:2px 0 16px}
+  .riskgauge .rl{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2)}
+  .riskbar{display:flex;gap:3px}
+  .riskbar i{width:20px;height:6px;border-radius:3px;background:var(--line)}
+  .riskbar i.on.low{background:var(--pos)}
+  .riskbar i.on.med{background:var(--gold)}
+  .riskbar i.on.high{background:var(--accent)}
+  .risktxt{font-size:11px;font-weight:800}
+  .risktxt.low{color:var(--pos)} .risktxt.med{color:var(--gold)} .risktxt.high{color:var(--accent)}
+
+  .movechips{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .movechip{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:7px 13px;
+    font-size:12px;font-weight:700;color:var(--text);cursor:pointer;transition:.15s}
+  .movechip:hover{border-color:var(--gold);color:var(--gold)}
+  .movechip.active{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+  .mvpanel{display:none;background:var(--panel2);border-left:2px solid var(--gold);border-radius:2px;
+    padding:12px 16px;margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.55}
+  .mvpanel.active{display:block;animation:f .2s ease}
+  .mvhint{font-size:10.5px;color:var(--muted2);margin-top:8px;font-style:italic}
+
+  .frow{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+  .fcard{flex:1;min-width:118px;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:11px 12px;cursor:pointer;text-align:center;transition:.15s}
+  .fcard:hover{border-color:var(--gold)}
+  .fcard.active{background:var(--accent-soft)}
+  .fcard.active .fn{color:var(--accent)}
+  .fcard .fn{font-size:11px;font-weight:800;color:var(--text);line-height:1.3}
+  .fcard .flvl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-top:6px;
+    display:inline-block;padding:2px 8px;border-radius:999px}
+  .flvl.high{color:#e2432f;background:rgba(226,67,47,.14)}
+  .flvl.med{color:#c99a4d;background:rgba(201,154,77,.14)}
+  .flvl.low{color:#7fae74;background:rgba(127,174,116,.14)}
+  .fpanel{display:none;background:var(--panel2);border-left:2px solid var(--gold);border-radius:2px;
+    padding:14px 18px;margin-top:14px;font-size:13px;color:var(--muted);line-height:1.55}
+  .fpanel.active{display:block;animation:f .2s ease}
+  .fpanel b{color:var(--text)}
+
+  .quadlbl{font-size:10px;fill:var(--muted2);font-weight:700}
+  .qco{font-size:9.5px;fill:var(--muted2);font-style:italic}
+
+  .chip .d.warn{color:var(--gold);background:var(--gold-soft)}
+  .chip .d.risk{color:var(--accent);background:var(--accent-soft)}
+
+  .attn-items{display:flex;flex-wrap:wrap;gap:10px}
+  .attn-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 15px;
+    font-size:12.5px;font-weight:700;color:var(--text);min-width:200px;flex:1}
+  .attn-item span{display:block;font-size:11.5px;font-weight:400;color:var(--muted2);margin-top:3px;line-height:1.4}
+
+  .attempt-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+  .attempt-card{flex:1;min-width:210px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;position:relative}
+  .attempt-card.current{border-color:var(--gold);background:linear-gradient(180deg,rgba(201,154,77,.09),rgba(201,154,77,0) 60%)}
+  .attempt-card .ano{font-family:Georgia,"Times New Roman",serif;font-size:26px;color:var(--muted2);line-height:1}
+  .attempt-card.current .ano{color:var(--gold)}
+  .attempt-card .ayr{font-size:15px;font-weight:800;color:var(--text);margin-top:4px}
+  .attempt-card .aval{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .attempt-card .aval b{color:var(--text)}
+  .averdict{display:inline-block;margin-top:12px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    padding:3px 10px;border-radius:999px}
+  .averdict.fail{color:var(--accent);background:var(--accent-soft)}
+  .averdict.live{color:var(--gold);background:var(--gold-soft)}
+  .attempt-arrow{display:flex;align-items:center;color:var(--muted2);font-size:18px;padding:0 2px}
+  @media(max-width:760px){.attempt-row{flex-direction:column}.attempt-arrow{display:none}}
+
+  .stakes-box{background:var(--panel2);border:1px solid var(--accent);border-radius:12px;padding:18px 22px;margin-top:22px}
+  .stakes-box .stag{display:block;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+  .stakes-box p{font-size:13.5px;color:var(--text);line-height:1.6}
+  .stakes-box p b{color:#fff}
+
+
+  @media(max-width:640px){
+    .hero .num{font-size:38px}
+    .chiprow{flex-direction:column}
+    .prow{flex-direction:column;gap:3px}
+    .prow .pname{width:auto}
+    .story-block{grid-template-columns:1fr}
+    .frow{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>The <em>Prism</em> Ledger</h1>
+      <p>PRISM — OYO’s parent, formerly Oravel Stays — is a diversified hospitality platform across Hotels, Homes and Listings in 35+ countries. This brief looks at the business behind its IPO filing: what the numbers show, where the exposure sits, and what it raises for leadership.</p>
+    </div>
+    <div class="stamp">Prepared for <b>Ritesh Agarwal &amp; leadership</b><br>Strategy briefing · <b id="today"></b></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-v="story">Big Picture</div>
+    <div class="tab" data-v="journey">The Journey</div>
+    <div class="tab" data-v="money">The Money</div>
+    <div class="tab" data-v="mkt">Market</div>
+    <div class="tab" data-v="pipe">IPO Pipeline</div>
+    <div class="tab" data-v="road">The Road Ahead</div>
+    <div class="tab" data-v="why">Beyond the Dashboard</div>
+  </div>
+
+  <!-- ============ STORY ============ -->
+  <section class="view active" id="story">
+    <div class="provbar">
+      <span><i class="pdotv" style="background:#7fae74"></i> Audited (UDRHP, filed 30 Jun 2026)</span>
+      <span><i class="pdotv" style="background:#c99a4d"></i> Company-disclosed, unaudited</span>
+      <span><i class="pdotv" style="background:#96908a"></i> Analyst-derived</span>
+    </div>
+
+    <div class="hero">
+      <div class="num">~84%</div>
+      <div class="cap"><div class="lab">of PRISM's revenue now comes from outside India<span class="src" title="Audited, UDRHP, filed 30 Jun 2026">A</span></div>
+        <div class="sub">US ~27% · Europe ~24% (9M FY26) — driven by the Dec 2024 Motel 6 (G6) acquisition</div></div>
+    </div>
+
+    <div class="chiprow">
+      <div class="chip"><div class="v">14,937</div><div class="l">India storefronts, all formats<span class="src" title="Company-disclosed, unaudited">U</span></div><span class="d up">Largest storefront count in India</span></div>
+      <div class="chip"><div class="v">1,573</div><div class="l">company-operated hotels<span class="src" title="Company-disclosed, unaudited">U</span></div><span class="d up">▲ 49% vs Mar '25 (1,053)</span></div>
+      <div class="chip"><div class="v">₹6,650 cr</div><div class="l">fresh-issue IPO ask<span class="src" title="Company-disclosed, DRHP filing">U</span></div></div>
+    </div>
+
+    <div class="insight">
+      <span class="tag">What this actually means for the business</span>
+      84% overseas isn't just an optics problem — the India business, the one the growth story is built on, still runs on cash generated abroad. Reasonable during a transition; harder to justify as a permanent structure. <b>One question worth an answer: can India carry its own weight before that overseas cash flow is needed elsewhere?</b>
+    </div>
+
+    <h2 class="sec">What PRISM actually is now — not a hotel company</h2>
+    <p class="sub">The DRHP structures the group into three verticals plus adjacent platforms. Read as "OYO Hotels," it's badly understated — and several things that look like open opportunities are in fact businesses PRISM already runs. ~293,500 storefronts across 35+ countries (Dec 2025).</p>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 16px;margin:6px 0 4px">
+      <div class="prow"><div class="pname">Hotels<small>core vertical</small></div><div class="pedge">OYO (budget) · Townhouse &amp; Palette (mid) · <b>Sunday</b> (premium 4–5★, SoftBank JV) · Motel 6 &amp; Studio 6 (US, via G6). ~24,300 hotels.</div></div>
+      <div class="prow"><div class="pname">Homes<small>core vertical</small></div><div class="pedge">Professionally managed vacation rentals — Belvilla · DanCenter · CheckMyGuest · Studio Prestige. ~124,700 homes.</div></div>
+      <div class="prow"><div class="pname">Listings<small>core vertical</small></div><div class="pedge">Subscription product — owners pay a fixed fee to be listed. ~144,600 listings; the purest asset-light, software-like recurring-revenue line in the group, and the closest thing PRISM has to a true "hospitality-OS" revenue stream.</div></div>
+      <div class="prow"><div class="pname">Weddingz<small>celebration</small></div><div class="pedge">India's largest wedding-venue &amp; banquet marketplace (acquired 2018, ~19 lakh monthly visitors). Owned already — so weddings are an existing line, not a greenfield entry.</div></div>
+      <div class="prow"><div class="pname">Innov8<small>workspaces</small></div><div class="pedge">Co-working / workspace platform inside the group — plus tours, events and F&amp;B offerings noted in the DRHP.</div></div>
+      <div class="prow"><div class="pname">Technology<small>enabling layer</small></div><div class="pedge">AI-driven partner tools and a data-science platform PRISM already markets publicly — an existing capability, not a missing strategy.</div></div>
+    </div>
+    <div class="insight" style="margin-top:14px">
+      <span class="tag">Execution, not entry — the bar this sets</span>
+      For a platform this wide, the strategic question isn't which new business to enter — it's whether each vertical it already runs earns its capital and its share of management attention. Weddings, residences, hospitality tech and AI aren't whitespace to move into; they're operating lines that have to justify their place. <b>That's a harder test than finding the next adjacency — and the right one for a company asking public markets for ₹6,650 cr.</b>
+    </div>
+
+    <h2 class="sec">Where this brief goes next</h2>
+    <p class="sub">One number from each section — click to jump straight there</p>
+    <div class="jumprow">
+      <div class="jumpcard" onclick="document.querySelector('.tab[data-v=journey]').click()">
+        <div class="jt">The Journey</div><div class="jv">$10B → $7–8B</div>
+        <div class="jl">Peak valuation to today's reset — and what it took to get there</div>
+      </div>
+      <div class="jumpcard" onclick="document.querySelector('.tab[data-v=money]').click()">
+        <div class="jt">The Money</div><div class="jv">₹748 cr</div>
+        <div class="jl">9M FY26 profit — tripled, but worth checking what's driving it</div>
+      </div>
+      <div class="jumpcard" onclick="document.querySelector('.tab[data-v=mkt]').click()">
+        <div class="jt">Market</div><div class="jv">$65.4B</div>
+        <div class="jl">India hospitality market today, growing 7.6% a year</div>
+      </div>
+      <div class="jumpcard" onclick="document.querySelector('.tab[data-v=pipe]').click()">
+        <div class="jt">IPO Pipeline</div><div class="jv">3rd attempt</div>
+        <div class="jl">Two withdrawals behind it — this one's live, not locked in</div>
+      </div>
+      <div class="jumpcard" onclick="document.querySelector('.tab[data-v=road]').click()">
+        <div class="jt">The Road Ahead</div><div class="jv">4 engines</div>
+        <div class="jl">Same balance sheet, a different risk level in each</div>
+      </div>
+      <div class="jumpcard" onclick="document.querySelector('.tab[data-v=why]').click()">
+        <div class="jt">Beyond the Dashboard</div><div class="jv">Why me</div>
+        <div class="jl">What building this brief taught me — and the thinking I’d bring to a room like this</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JOURNEY ============ -->
+  <section class="view" id="journey">
+    <div class="hero">
+      <div class="num">Rise. Fall.<br>Rebuild.</div>
+      <div class="cap"><div class="lab">The arc that defines where this company is now, and what it took to get here</div>
+        <div class="sub">Illustrative valuation trajectory — not to exact scale, ordering and direction are what matter. Numbered points below map directly onto the narrative.</div></div>
+    </div>
+
+    <div class="chart-wrap">
+      <svg viewBox="0 0 860 260" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="fillg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e2432f" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#e2432f" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="30" y1="220" x2="830" y2="220" stroke="#2b2a2f" stroke-width="1"/>
+        <path d="M30,214 L140,180 L280,110 L360,44 L440,96 L520,176 L610,150 L700,112 L800,80 L800,220 L30,220 Z" fill="url(#fillg)"/>
+        <path d="M30,214 L140,180 L280,110 L360,44 L440,96 L520,176 L610,150 L700,112 L800,80"
+              fill="none" stroke="#e2432f" stroke-width="2.5"/>
+
+        <!-- valuation checkpoints (circle + number badge) -->
+        <g>
+          <circle cx="30" cy="214" r="9" fill="#e2432f"><title>2012 — Oravel Stays founded; 2013 — Thiel Fellowship, pivot to OYO Rooms</title></circle>
+          <text x="30" y="218" text-anchor="middle" class="cbadge">1</text>
+
+          <circle cx="140" cy="180" r="9" fill="#e2432f"><title>2015 — SoftBank leads $100M Series C</title></circle>
+          <text x="140" y="184" text-anchor="middle" class="cbadge">2</text>
+
+          <circle cx="280" cy="110" r="9" fill="#e2432f"><title>2018 — $5B unicorn valuation</title></circle>
+          <text x="280" y="114" text-anchor="middle" class="cbadge">3</text>
+
+          <circle cx="360" cy="44" r="10" fill="#e2432f"><title>Oct 2019 — Peak valuation $10B</title></circle>
+          <text x="360" y="48" text-anchor="middle" class="cbadge">4</text>
+
+          <circle cx="440" cy="96" r="9" fill="#e2432f"><title>2020 — Covid collapse, deep layoffs</title></circle>
+          <text x="440" y="100" text-anchor="middle" class="cbadge">5</text>
+
+          <circle cx="520" cy="176" r="9" fill="#e2432f"><title>2021–22 — IPO filed, then shelved; valuation marked down ~75%</title></circle>
+          <text x="520" y="180" text-anchor="middle" class="cbadge">6</text>
+
+          <circle cx="610" cy="150" r="9" fill="#e2432f"><title>2022–24 — Reset to asset-light model; first full-year profit in FY24</title></circle>
+          <text x="610" y="154" text-anchor="middle" class="cbadge">7</text>
+
+          <circle cx="700" cy="112" r="10" fill="#c99a4d"><title>2025 — Profit triples 9M FY26 vs FY25</title></circle>
+          <text x="700" y="116" text-anchor="middle" class="cbadge">8</text>
+
+          <circle cx="800" cy="80" r="10" fill="#c99a4d"><title>2026 — Third IPO attempt, $7–8B target</title></circle>
+          <text x="800" y="84" text-anchor="middle" class="cbadge">9</text>
+        </g>
+
+        <!-- acquisition markers (diamonds, offset above the line) -->
+        <g>
+          <rect x="399" y="15" width="10" height="10" fill="#c99a4d" transform="rotate(45 404 20)"><title>2019 — @Leisure Group acquired (Europe, vacation rentals)</title></rect>
+          <text x="404" y="12" text-anchor="middle" class="cpt">EU deal</text>
+
+          <rect x="605" y="120" width="10" height="10" fill="#c99a4d" transform="rotate(45 610 125)"><title>Dec 2024 — G6 Hospitality (Motel 6) acquired for $525M</title></rect>
+          <text x="610" y="112" text-anchor="middle" class="cpt">US deal</text>
+
+          <rect x="695" y="82" width="10" height="10" fill="#c99a4d" transform="rotate(45 700 87)"><title>2024 — Checkmyguest acquired (France)</title></rect>
+          <text x="700" y="74" text-anchor="middle" class="cpt">EU deal</text>
+        </g>
+
+        <text x="30" y="238" class="cyr" text-anchor="middle">2013</text>
+        <text x="140" y="238" class="cyr" text-anchor="middle">2015</text>
+        <text x="280" y="238" class="cyr" text-anchor="middle">2018</text>
+        <text x="322" y="26" class="cval" text-anchor="middle">$10B</text>
+        <text x="360" y="238" class="cyr" text-anchor="middle">2019</text>
+        <text x="440" y="238" class="cyr" text-anchor="middle">2020</text>
+        <text x="520" y="238" class="cyr" text-anchor="middle">2022</text>
+        <text x="610" y="238" class="cyr" text-anchor="middle">2024</text>
+        <text x="700" y="238" class="cyr" text-anchor="middle">2025</text>
+        <text x="800" y="66" class="cval" text-anchor="middle">$7–8B</text>
+        <text x="800" y="238" class="cyr" text-anchor="middle">2026</text>
+      </svg>
+      <div class="legend">
+        <span><i class="dot"></i> Valuation checkpoint (hover for detail)</span>
+        <span><i class="diamond"></i> Acquisition event</span>
+      </div>
+    </div>
+
+    <div class="story-block">
+      <div class="num-badge">1</div>
+      <div>
+        <div class="era">The Spark</div>
+        <p>Ritesh Agarwal was 17 when he dropped out of college in Delhi, having stayed in over 100 budget hotels and guesthouses across India and hit the same problem every time: no consistency, no trust in what he'd actually get. <b>Oravel Stays</b> launched in 2012 as a listings aggregator for that segment — and only partly worked, since aggregating listings without controlling quality still left travelers guessing. In 2013 Agarwal became the <b>first Indian selected for the Thiel Fellowship</b> — a $100,000 grant and direct mentorship from Peter Thiel, built specifically for under-20 founders willing to skip college to build full-time. That backing funded the pivot: in May 2013, Oravel relaunched as <b>OYO Rooms</b>, standardizing partner hotels — AC, wifi, breakfast, consistent service — under one brand, the same franchise logic the company still runs today, just at a very different scale.</p>
+      </div>
+    </div>
+    <div class="story-block">
+      <div class="num-badge">2–4</div>
+      <div>
+        <div class="era">The Rise</div>
+        <p>SoftBank's 2015 investment turned that standardization model into a blitzscaling bet — capital chasing city-count over unit economics. By 2018 that bought unicorn status at <b>$5B</b>; by October 2019 a $1.5B round pushed PRISM to a peak <b>$10B</b>, with Agarwal personally buying ~$2B of shares to raise his own stake — a leveraged vote of confidence right at the top.</p>
+      </div>
+    </div>
+    <div class="story-block">
+      <div class="num-badge">5–7</div>
+      <div>
+        <div class="era">The Fall</div>
+        <p>Covid didn't just dent the business, it exposed the model: growth funded by capital, not cash flow, collapses the moment travel does. A first IPO attempt was filed in 2021 and quietly shelved in 2022 as institutional holders <b>marked the stake down by roughly 75%</b> from peak. The company spent the next two years converting from a capital-intensive, minimum-guarantee model to an asset-light franchise platform — unglamorous, necessary work.</p>
+      </div>
+    </div>
+    <div class="story-block">
+      <div class="num-badge">7–9</div>
+      <div>
+        <div class="era">The Rebuild</div>
+        <p>The rebuild wasn't organic growth — it was <b>bought</b>. December 2024's $525M Motel 6 acquisition (the "US deal" marker above) brought a mature, cash-generative American franchise business into the group overnight, while the "EU deal" markers show a parallel, smaller-ticket pattern in Europe. Both moves were debt-funded, and both are now the collateral behind a 2026 IPO priced at <b>$7–8B</b> — recovering, but deliberately still below the 2019 peak.</p>
+      </div>
+    </div>
+
+    <h2 class="sec">The acquisition trail behind the rebuild</h2>
+    <p class="sub">One large US bet, and a portfolio of smaller European bolt-ons — two different playbooks, same underlying goal</p>
+    <div class="trail">
+      <div class="tcard">
+        <h4>United States — one big move</h4>
+        <div class="deal"><b>G6 Hospitality (Motel 6 / Studio 6)</b><span>$525M from Blackstone · Dec 2024 · ~1,500 franchised hotels across the US &amp; Canada</span></div>
+        <div class="deal"><b>Impact</b><span>Instantly made the US PRISM's single largest revenue source — a stable, decades-old brand doing the heavy lifting for the IPO story.</span></div>
+      </div>
+      <div class="tcard">
+        <h4 class="eu">Europe — a patchwork, not one deal</h4>
+        <div class="deal"><b>@Leisure Group (Netherlands)</b><span>€369.5M · 2019 · vacation-rental brands Belvilla, DanCenter, Danland</span></div>
+        <div class="deal"><b>Checkmyguest (France)</b><span>~€25M · 2024 · Paris-based rental management platform</span></div>
+        <div class="deal"><b>Direct Booker (Croatia) &amp; Bornholmske Feriehuse (Nordics)</b><span>Smaller regional rental platforms, 2022–24</span></div>
+        <div class="deal"><b>Impact</b><span>Builds a premium/vacation-rental layer (plus the new "Sunday" hotel brand in the UK) alongside the old budget-hotel identity — diversifying beyond a single flagship the way the US relies on Motel 6.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MONEY ============ -->
+  <section class="view" id="money">
+    <div class="provbar">
+      <span><i class="pdotv" style="background:#7fae74"></i> Audited (UDRHP, filed 30 Jun 2026)</span>
+      <span><i class="pdotv" style="background:#c99a4d"></i> Company-disclosed, unaudited</span>
+      <span><i class="pdotv" style="background:#96908a"></i> Analyst-derived</span>
+    </div>
+
+    <div class="hero">
+      <div class="num">₹748 cr</div>
+      <div class="cap"><div class="lab">profit after tax, 9 months of FY26</div>
+        <div class="sub">FY25 PAT: ₹623 cr<span class="src" title="Unaudited, company town-hall disclosure, Jun 2025">U</span> (company town hall, Jun 2025) vs ₹244.82 cr<span class="src" title="Audited, UDRHP §Financial Statements, filed 30 Jun 2026">A</span> (audited UDRHP, filed 30 Jun 2026)</div></div>
+    </div>
+
+    <div class="bars">
+      <div class="bar-col"><div class="bw"><div class="bar" style="height:28%"><span>₹244.8cr<span class="src" title="Audited, UDRHP, filed 30 Jun 2026">A</span></span></div></div><div class="bl">FY25<br>audited</div></div>
+      <div class="bar-col"><div class="bw"><div class="bar" style="height:70%;opacity:.5" ><span>₹623cr<span class="src" title="Unaudited, company town-hall disclosure, Jun 2025">U</span></span></div></div><div class="bl">FY25<br>unaudited</div></div>
+      <div class="bar-col"><div class="bw"><div class="bar hi" style="height:84%"><span>₹748cr</span></div></div><div class="bl">9M FY26<br>9 months</div></div>
+    </div>
+
+    <div class="chiprow">
+      <div class="chip"><div class="v">₹767.5 cr</div><div class="l">of FY25 PAT from deferred tax credits &amp; one-off gains<span class="src" title="Analyst-derived, from UDRHP line items">E</span></div></div>
+      <div class="chip"><div class="v">−₹489.3 cr</div><div class="l">FY25 pre-tax result excluding those items<span class="src" title="Analyst-derived, from UDRHP line items">E</span></div></div>
+    </div>
+
+    <div class="chiprow">
+      <div class="chip"><div class="v">₹6,252.83 cr</div><div class="l">FY25 revenue<span class="src" title="Audited, UDRHP, filed 30 Jun 2026">A</span> (≈$730M; press coverage commonly cites $754M, ~3% higher)</div></div>
+      <div class="chip"><div class="v">₹2,127 cr</div><div class="l">9M FY26 statutory EBITDA<span class="src" title="Audited, UDRHP, filed 30 Jun 2026">A</span> (₹1,968 cr on an adjusted basis — same period, different metric)</div></div>
+    </div>
+
+    <h2 class="sec">Where the revenue actually comes from</h2>
+    <p class="sub">9M FY26 revenue mix — the "rest of world" slice is a residual, not separately disclosed</p>
+    <div class="mix">
+      <div class="mixbar">
+        <div class="mixseg" style="width:16%;background:#4a4844">India 16%</div>
+        <div class="mixseg" style="width:27%;background:#e2432f">US 27%</div>
+        <div class="mixseg" style="width:24%;background:#c99a4d">Europe 24%</div>
+        <div class="mixseg" style="width:33%;background:#3a3934">Rest of world 33%</div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <span class="tag">What's actually driving the profit turnaround</span>
+      Profit tripling mid-integration is real progress — but it's happening at the same time debt from the Motel 6 deal is being carried, and the new IPO raise is earmarked to repay most of it. That raises an open question: <b>is this profit growth durable on its own, or the most flattering year to show, with two acquisitions freshly in the base?</b> Worth having an answer to before it comes up, rather than resting on the trend line alone. <i>(See IPO Pipeline for what the raise itself is earmarked for.)</i>
+    </div>
+  </section>
+
+  <!-- ============ MARKET ============ -->
+  <section class="view" id="mkt">
+    <div class="hero">
+      <div class="num">$65.4B</div>
+      <div class="cap"><div class="lab">India hospitality market today, growing to $101B by 2032</div>
+        <div class="sub">7.6% CAGR — chain hotels growing ~2× faster than the market overall</div></div>
+    </div>
+
+    <h2 class="sec">Industry structure — Porter's Five Forces</h2>
+    <p class="sub">Click a force to see how it specifically applies to OYO</p>
+    <div class="frow">
+      <div class="fcard active" data-force="f-rivalry"><div class="fn">Competitive Rivalry</div><span class="flvl high">High</span></div>
+      <div class="fcard" data-force="f-entrants"><div class="fn">New Entrants</div><span class="flvl med">Medium</span></div>
+      <div class="fcard" data-force="f-suppliers"><div class="fn">Supplier Power</div><span class="flvl med">Medium-High</span></div>
+      <div class="fcard" data-force="f-buyers"><div class="fn">Buyer Power</div><span class="flvl high">High</span></div>
+      <div class="fcard" data-force="f-subs"><div class="fn">Substitutes</div><span class="flvl med">Medium</span></div>
+    </div>
+    <div class="fpanel active" id="f-rivalry"><b>Competitive Rivalry — High.</b> Treebo, FabHotels, Ginger, and full-service chains are all fighting for the same India footprint. OYO's scale is real, but so is the field — no single player has pricing power.</div>
+    <div class="fpanel" id="f-entrants"><b>Threat of New Entrants — Medium.</b> The asset-light franchise model is replicable, and well-funded entrants (Tata's Ginger, OTA-backed brands) can copy it. Brand recognition and existing scale are the main barriers, not capital.</div>
+    <div class="fpanel" id="f-suppliers"><b>Supplier Power — Medium-High.</b> Independent hotel owners are the "suppliers" here, and switching aggregators or brands is relatively easy for them. If OYO doesn't deliver occupancy and rate uplift, owners can walk.</div>
+    <div class="fpanel" id="f-buyers"><b>Buyer Power — High.</b> Price-sensitive travelers and OTAs like MakeMyTrip control much of the demand. Guests have near-zero switching cost, and MakeMyTrip's distribution reach gives it leverage over OYO's own funnel.</div>
+    <div class="fpanel" id="f-subs"><b>Threat of Substitutes — Medium.</b> Direct OTA booking, unbranded budget hotels, and short-term rental platforms all substitute for OYO's core offering, especially at the price-sensitive end.</div>
+
+    <h2 class="sec">Who OYO is actually up against in India</h2>
+    <div class="plist">
+      <div class="prow"><div class="pname">Treebo<small>&lt;1,000 hotels</small></div><div class="pedge">Quality-first "indulgent budget" positioning; pivoting to a SaaS play for non-brand hotels.</div></div>
+      <div class="prow"><div class="pname">FabHotels<small>~1,300 hotels</small></div><div class="pedge">Slightly premium budget, built around corporate travel and consistent amenities.</div></div>
+      <div class="prow"><div class="pname">Ginger (Tata)<small>250+ hotels, 150+ locations</small></div><div class="pedge">Branded economy/mid-scale — wins on the trust of the Tata/IHCL name.</div></div>
+      <div class="prow"><div class="pname">MakeMyTrip<small>OTA</small></div><div class="pedge">Owns distribution, not supply — both a partner and a threat to OYO's demand funnel.</div></div>
+    </div>
+
+    <h2 class="sec">Competitive positioning — scale vs. ownership model</h2>
+    <p class="sub">Illustrative, not to exact scale — hover any dot for detail</p>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 860 260" xmlns="http://www.w3.org/2000/svg">
+        <line x1="40" y1="20" x2="40" y2="225" stroke="#2b2a2f" stroke-width="1"/>
+        <line x1="40" y1="225" x2="830" y2="225" stroke="#2b2a2f" stroke-width="1"/>
+        <line x1="435" y1="20" x2="435" y2="225" stroke="#2b2a2f" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="40" y1="120" x2="830" y2="120" stroke="#2b2a2f" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <text x="60" y="35" class="qco">Scale + low ownership</text>
+        <text x="620" y="35" class="qco">Scale + full ownership</text>
+        <text x="60" y="215" class="qco">Niche + asset-light</text>
+        <text x="640" y="215" class="qco">Niche + full-service</text>
+
+        <circle cx="110" cy="55" r="11" fill="#e2432f"><title>OYO/PRISM — 14,937 storefronts, asset-light aggregator, unmatched scale</title></circle>
+        <text x="110" y="82" text-anchor="middle" class="quadlbl">OYO</text>
+
+        <circle cx="150" cy="195" r="7" fill="#96908a"><title>Treebo — &lt;1,000 hotels, asset-light, quality-first niche</title></circle>
+        <text x="150" y="209" text-anchor="middle" class="quadlbl">Treebo</text>
+
+        <circle cx="200" cy="180" r="7" fill="#96908a"><title>FabHotels — ~1,300 hotels, asset-light, corporate-travel niche</title></circle>
+        <text x="200" y="167" text-anchor="middle" class="quadlbl">FabHotels</text>
+
+        <circle cx="560" cy="188" r="8" fill="#c99a4d"><title>Ginger — 250+ hotels across 150+ locations, Tata/IHCL-backed</title></circle>
+        <text x="560" y="202" text-anchor="middle" class="quadlbl">Ginger</text>
+
+        <circle cx="630" cy="175" r="8" fill="#c99a4d"><title>Lemon Tree — ~130 hotels, owned &amp; managed, mid-market niche</title></circle>
+        <text x="630" y="163" text-anchor="middle" class="quadlbl">Lemon Tree</text>
+
+        <circle cx="700" cy="135" r="9" fill="#c99a4d"><title>Marriott India — 158 hotels, ~29,000 rooms, managed/franchised full-service</title></circle>
+        <text x="700" y="122" text-anchor="middle" class="quadlbl">Marriott</text>
+
+        <circle cx="750" cy="90" r="10" fill="#c99a4d"><title>IHCL (Taj) — 628 hotels (373 operating, 255 pipeline), India's largest owned/managed chain</title></circle>
+        <text x="750" y="76" text-anchor="middle" class="quadlbl">IHCL</text>
+
+        <text x="435" y="245" text-anchor="middle" class="cpt">← Asset-light (aggregator/franchise)      Asset-heavy (owned &amp; managed) →</text>
+        <text x="18" y="122" text-anchor="middle" class="cpt" transform="rotate(-90 18 122)">Footprint scale (India) ↑</text>
+      </svg>
+    </div>
+
+    <div class="insight">
+      <span class="tag">The honest answer</span>
+      By raw count, OYO's India network is larger than IHCL, Marriott and Lemon Tree combined. But that's a different asset class, not just a bigger version of the same one — most of it is independent, revenue-share property, not owned-or-managed keys. <b>The fairer question is who has more durable, defensible ones</b> — which is exactly the case company-operated storefronts (1,573, up 49%) are meant to build.
+    </div>
+  </section>
+
+  <!-- ============ PIPELINE ============ -->
+  <section class="view" id="pipe">
+    <div class="hero">
+      <div class="num">Third time</div>
+      <div class="cap"><div class="lab">Two withdrawn attempts behind it — this is the one riding on getting it right</div>
+        <div class="sub">Targeted listing window: H2 2026, reportedly Aug–Sep · price band and exact dates still genuinely unknown</div></div>
+    </div>
+
+    <h2 class="sec">Three tries at going public</h2>
+    <p class="sub">Same company, three very different pitches — hover a card for what happened</p>
+    <div class="attempt-row">
+      <div class="attempt-card">
+        <div class="ano">01</div>
+        <div class="ayr">2021</div>
+        <div class="aval">Filed Oct 2021 targeting <b>~$9–12B</b>, seeking to raise <b>₹8,430 cr</b>. Still deep in losses, growth-at-all-costs model.</div>
+        <span class="averdict fail" title="SEBI raised queries on disclosures, governance, and going-concern language tied to heavy losses. The filing was updated once, then quietly allowed to lapse through 2022 as the valuation was marked down ~75% from peak.">Withdrawn 2022</span>
+      </div>
+      <div class="attempt-arrow">→</div>
+      <div class="attempt-card">
+        <div class="ano">02</div>
+        <div class="ayr">2023</div>
+        <div class="aval">Filed via SEBI's confidential route for the first time — a smaller, humbler ask at roughly <b>$1.5–4B</b>. Business mid-turnaround, not yet profitable.</div>
+        <span class="averdict fail" title="Withdrawn in May 2024. The company was mid-refinancing (a bond buyback and new debt facility), which would have materially changed the financials already on file — continuing would have meant re-filing anyway, so it pulled back to fix the balance sheet first.">Withdrawn 2024</span>
+      </div>
+      <div class="attempt-arrow">→</div>
+      <div class="attempt-card current">
+        <div class="ano">03</div>
+        <div class="ayr">2026</div>
+        <div class="aval">Filed confidentially Jan 2026, targeting <b>$7–8B</b> on <b>₹6,650 cr</b>, 100% fresh issue. First attempt to reach SEBI clearance and a public filing.</div>
+        <span class="averdict live" title="SEBI issued its observations letter 5 Jun 2026 — a stage neither of the first two attempts reached. Updated DRHP filed publicly 30 Jun 2026, institutional roadshow underway. What's left: price band, RHP, listing.">In progress</span>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:22px">
+      <span class="tag">What's actually different this time</span>
+      The valuation ask is <b>a third of the original 2021 target</b> — this is a company asking to be judged on today's numbers, not 2019's story. It's now profitable rather than loss-making, an asset-light model has replaced the capital-intensive one that broke in Covid, and the Motel 6 acquisition gives it one stable, cash-generative anchor business neither earlier attempt had. It's also a <b>100% fresh issue with no offer-for-sale</b> — no early investor is racing to cash out, which is itself a signal the company doesn't need this listing to engineer an exit for anyone.
+    </div>
+
+    <h2 class="sec">The mechanics of this raise</h2>
+    <div class="chiprow">
+      <div class="chip"><div class="v">1:19</div><div class="l">bonus share issue, approved Dec 2025</div></div>
+      <div class="chip"><div class="v">₹1,330 cr</div><div class="l">possible pre-IPO placement</div></div>
+      <div class="chip"><div class="v">5+</div><div class="l">lead bankers incl. ICICI Sec., Axis Capital, Goldman Sachs, Citi</div></div>
+    </div>
+
+    <h2 class="sec">What the ₹6,650 cr is actually for</h2>
+    <p class="sub">A split worth having a clear, standing answer for — growth capital vs. balance-sheet cleanup</p>
+    <div class="split-bar">
+      <div class="split-seg" style="width:75%;background:#e2432f"></div>
+      <div class="split-seg" style="width:25%;background:#4a4844"></div>
+    </div>
+    <div class="mixkey">
+      <span><i class="sw" style="background:#e2432f"></i> ~75% (₹4,987 cr) — repays Singapore-subsidiary borrowings (funded the Motel 6 / G6 deal)</span>
+      <span><i class="sw" style="background:#4a4844"></i> ~25% — general corporate purposes, capex, working capital</span>
+    </div>
+
+    <h2 class="sec">The road to listing</h2>
+    <p class="sub">Seven milestones, one still in motion — the gold marker shows where things stand today</p>
+    <div class="vtl">
+      <div class="vstep">
+        <div class="vdotwrap"><div class="vdot"></div></div>
+        <div class="vbody"><div class="vhead"><span class="vdate">20 Dec 2025</span></div>
+          <div class="vtxt">Shareholders approve the <b>₹6,650 cr IPO</b> and a 1:19 bonus issue at an EGM.</div></div>
+      </div>
+      <div class="vstep">
+        <div class="vdotwrap"><div class="vdot"></div></div>
+        <div class="vbody"><div class="vhead"><span class="vdate">1 Jan 2026</span></div>
+          <div class="vtxt">Confidential DRHP filed with SEBI — financials kept private during review.</div></div>
+      </div>
+      <div class="vstep">
+        <div class="vdotwrap"><div class="vdot"></div></div>
+        <div class="vbody"><div class="vhead"><span class="vdate">5 Jun 2026</span></div>
+          <div class="vtxt">SEBI issues its <b>observations letter</b> — clearing a stage neither prior attempt reached.</div></div>
+      </div>
+      <div class="vstep">
+        <div class="vdotwrap"><div class="vdot"></div></div>
+        <div class="vbody"><div class="vhead"><span class="vdate">30 Jun 2026</span></div>
+          <div class="vtxt">Updated DRHP filed publicly — first time the market sees the real numbers.</div></div>
+      </div>
+      <div class="vstep now">
+        <div class="vdotwrap"><div class="vdot"></div></div>
+        <div class="vbody"><div class="vhead"><span class="vdate">Jul 2026</span><span class="vnow-badge">Underway now</span></div>
+          <div class="vtxt">Institutional roadshow — management pitching the turnaround story directly to anchor investors.</div></div>
+      </div>
+      <div class="vstep pending">
+        <div class="vdotwrap"><div class="vdot"></div></div>
+        <div class="vbody"><div class="vhead"><span class="vdate">Next</span></div>
+          <div class="vtxt">Final Red Herring Prospectus with actual <b>price band</b> and bid dates — market chatter points to early Aug 2026.</div></div>
+      </div>
+      <div class="vstep pending">
+        <div class="vdotwrap"><div class="vdot"></div></div>
+        <div class="vbody"><div class="vhead"><span class="vdate">Target: H2 2026</span></div>
+          <div class="vtxt">Listing on NSE &amp; BSE, reportedly in the Aug–Sep window, at <b>$7–8B</b>.</div></div>
+      </div>
+    </div>
+
+    <div class="stakes-box">
+      <span class="stag">Why this one can't be a fourth attempt</span>
+      <p>Two withdrawals already sit on the public record — a third would move past "market conditions" as an explanation and start reading as an execution problem. A close now would also delay liquidity for employees sitting on ESOPs, complicate SoftBank's own path to trimming its ~40% stake, and make the next fundraise — IPO or private — harder to price. <b>The business case has never been stronger; the open question is whether that's enough to finally convert it into a listing.</b></p>
+    </div>
+  </section>
+
+  <!-- ============ THE ROAD AHEAD ============ -->
+  <section class="view" id="road">
+    <div class="hero">
+      <div class="num">4 engines</div>
+      <div class="cap"><div class="lab">India, US, Europe, Rest of World — same balance sheet, four different jobs to do next</div>
+        <div class="sub">Each engine's concern and its next move — at a glance</div></div>
+    </div>
+
+    <style>
+      .rahd-split{margin:20px 0 4px}
+      .rahd-splitbar{display:flex;height:38px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+      .rahd-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:11px;font-size:11.5px;color:var(--muted);font-weight:600}
+      .rahd-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+      .rahd-splcap{font-size:11px;color:var(--muted2);margin-top:9px;line-height:1.5}
+      .rahd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:24px 0 6px}
+      .rahd-card{background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--gold);border-radius:12px;padding:14px 14px}
+      .rahd-card.high{border-top-color:var(--accent)}
+      .rahd-card.bkt{cursor:pointer;transition:.15s}
+      .rahd-card.bkt:hover{border-color:var(--gold)}
+      .rahd-card.high.bkt:hover{border-color:var(--accent)}
+      .rahd-card.active{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+      .rahd-card.high.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+      .rahd-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px}
+      .rahd-nm{font-size:11px;font-weight:800;letter-spacing:.5px}
+      .rahd-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;color:var(--gold);background:var(--gold-soft);white-space:nowrap}
+      .rahd-pill.high{color:var(--accent);background:var(--accent-soft)}
+      .rahd-pct{font-family:Georgia,"Times New Roman",serif;font-size:26px;color:var(--text);line-height:1}
+      .rahd-pct span{font-size:10.5px;color:var(--muted2);font-family:inherit;margin-left:4px}
+      .rahd-desc{font-size:10.5px;color:var(--muted2);margin:4px 0 10px}
+      .rahd-cm{display:flex;gap:8px;font-size:11.5px;margin-top:4px;line-height:1.4}
+      .rahd-cm .k{flex-shrink:0;font-size:8px;font-weight:800;letter-spacing:.5px;padding-top:2px;color:var(--accent)}
+      .rahd-cm .t{color:var(--muted)}
+      .rahd-hint{font-size:8px;font-weight:800;letter-spacing:.6px;color:var(--muted2);margin-top:11px}
+      @media(max-width:640px){.rahd-grid{grid-template-columns:1fr 1fr}}
+    </style>
+
+    <div class="rahd-split">
+      <div class="rahd-splitbar">
+        <div style="width:16%;background:#8a7f66"></div>
+        <div style="width:27%;background:#e2432f"></div>
+        <div style="width:24%;background:#c99a4d"></div>
+        <div style="width:33%;background:#7fae74"></div>
+      </div>
+      <div class="rahd-legend">
+        <span><i style="background:#8a7f66"></i>India 16%</span>
+        <span><i style="background:#e2432f"></i>US 27%</span>
+        <span><i style="background:#c99a4d"></i>Europe 24%</span>
+        <span><i style="background:#7fae74"></i>Rest of World 33%</span>
+      </div>
+      <div class="rahd-splcap">Group revenue by market, 9M FY26. The biggest slice — Rest of World — is also the least disclosed; the home market is the smallest.</div>
+    </div>
+
+    <div class="rahd-grid">
+      <div class="rahd-card med bkt" data-bkt="bp-india">
+        <div class="rahd-top"><span class="rahd-nm">INDIA</span><span class="rahd-pill">Medium</span></div>
+        <div class="rahd-pct">~16%<span>rev</span></div>
+        <div class="rahd-desc">Biggest footprint · 14,937 storefronts</div>
+        <div class="rahd-cm"><span class="k">CONCERN</span><span class="t">Scale isn’t converting to cash yet.</span></div>
+        <div class="rahd-hint">▸ CLICK FOR DETAIL</div>
+      </div>
+      <div class="rahd-card high bkt" data-bkt="bp-us">
+        <div class="rahd-top"><span class="rahd-nm">UNITED STATES</span><span class="rahd-pill high">High</span></div>
+        <div class="rahd-pct">~27%<span>rev</span></div>
+        <div class="rahd-desc">One asset · Motel 6 (Dec 2024)</div>
+        <div class="rahd-cm"><span class="k">CONCERN</span><span class="t">One brand carries most of group scale.</span></div>
+        <div class="rahd-hint">▸ CLICK FOR DETAIL</div>
+      </div>
+      <div class="rahd-card med bkt" data-bkt="bp-eu">
+        <div class="rahd-top"><span class="rahd-nm">EUROPE</span><span class="rahd-pill">Medium</span></div>
+        <div class="rahd-pct">~24%<span>rev</span></div>
+        <div class="rahd-desc">Many small country-by-country deals</div>
+        <div class="rahd-cm"><span class="k">CONCERN</span><span class="t">No brand recognised at scale.</span></div>
+        <div class="rahd-hint">▸ CLICK FOR DETAIL</div>
+      </div>
+      <div class="rahd-card med bkt" data-bkt="bp-row">
+        <div class="rahd-top"><span class="rahd-nm">REST OF WORLD</span><span class="rahd-pill">Medium</span></div>
+        <div class="rahd-pct">~33%<span>rev</span></div>
+        <div class="rahd-desc">Largest slice · not reported by market</div>
+        <div class="rahd-cm"><span class="k">CONCERN</span><span class="t">Biggest bucket, least visibility.</span></div>
+        <div class="rahd-hint">▸ CLICK FOR DETAIL</div>
+      </div>
+    </div>
+
+    <div class="bkt-panel" id="bp-india">
+      <h3>India — big footprint, small share</h3>
+      <div class="bsub">14,937 storefronts · 1,573 company-operated (+49%) · still only ~16% of group revenue</div>
+      <div class="riskgauge"><span class="rl">Risk</span><div class="riskbar"><i class="on med"></i><i class="on med"></i><i></i></div><span class="risktxt med">Medium</span></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Most of the footprint is revenue-share, not owned — so scale isn’t converting to cash, while Ginger and MakeMyTrip close in.</p>
+      <div class="movechips">
+        <span class="movechip active" data-note="India is at ~16% of group revenue today; a stated target tied to the company-operated rollout is one way to track progress toward a higher share.">Revenue-share target</span>
+        <span class="movechip" data-note="Independent storefronts converting to company-operated is where the margin currently sits.">Company-operated conversion</span>
+        <span class="movechip" data-note="Ginger competes largely on consistency and trust under the Tata name; MakeMyTrip is the dominant demand channel.">Trust vs. price positioning</span>
+        <span class="movechip" data-note="MakeMyTrip currently sits as the dominant channel; direct demand is one lever to reduce that dependency.">Direct demand channel</span>
+      </div>
+      <div class="mvpanel active">India is at ~16% of group revenue today; a stated target tied to the company-operated rollout is one way to track progress toward a higher share.</div>
+      <div class="mvhint">Tap a chip to see why it matters</div>
+
+      <div class="insight" style="margin-top:20px">
+        <span class="tag">Weddings — owns the demand, not the venue</span>
+        PRISM isn’t absent from weddings — it has owned Weddingz, India’s largest wedding-venue marketplace, since 2018. But that’s a thin commission layer: it captures the marketplace economics, not the venue economics Taj and Oberoi own. What PRISM alone holds is both sides — the demand (Weddingz) and an emerging premium supply brand (Sunday, now moving into resort and destination markets). <b>Open question: can the two fuse — Weddingz feeding Sunday’s celebration inventory — into one owned-demand-to-supply loop no rival has?</b>
+      </div>
+
+      <p class="sub" style="margin-top:14px">Two ways to close the gap — trade-offs, not a recommendation</p>
+      <div class="attn-items">
+        <div class="attn-item">Franchise Sunday into venues<span>Revenue-share with resort/heritage owners near Alwar–Sariska, Ramnagar–Corbett, fed by Weddingz demand. Capital-light; no land upside.</span></div>
+        <div class="attn-item">Develop venue real estate<span>Buy land pre-development and build under Sunday — captures land + event revenue. Heavier capex, 2–4yr build. (Goa is now fining unpermitted beach weddings.)</span></div>
+      </div>
+    </div>
+
+    <div class="bkt-panel" id="bp-us">
+      <h3>United States — every bet on one company</h3>
+      <div class="bsub">Motel 6 (G6 Hospitality), $525M, Dec 2024 — now the majority of group GBV</div>
+      <div class="riskgauge"><span class="rl">Risk</span><div class="riskbar"><i class="on high"></i><i class="on high"></i><i class="on high"></i></div><span class="risktxt high">High</span></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">One acquisition carries most of group scale, with no second US pillar if Motel 6 softens.</p>
+      <div class="movechips">
+        <span class="movechip active" data-note="Whether the Motel 6 acquisition debt is matched in USD against Motel 6’s own USD cash flow is a standing question, if not already confirmed.">USD hedge status</span>
+        <span class="movechip" data-note="Motel 6 is currently folded into the ‘US’ line rather than reported separately, which may understate how concentrated that exposure is.">Separate Motel 6 reporting</span>
+        <span class="movechip" data-note="A second, smaller US brand or partnership over time is one way to reduce single-name dependence.">Second US pillar</span>
+        <span class="movechip" data-note="Motel 6 franchisee performance on a standing basis, not just at renewal, is one indicator worth tracking.">Franchisee health tracking</span>
+      </div>
+      <div class="mvpanel active">Whether the Motel 6 acquisition debt is matched in USD against Motel 6’s own USD cash flow is a standing question, if not already confirmed.</div>
+      <div class="mvhint">Tap a chip to see why it matters</div>
+    </div>
+
+    <div class="bkt-panel" id="bp-eu">
+      <h3>Europe — the opposite problem</h3>
+      <div class="bsub">@Leisure (€369.5M, 2019), Checkmyguest, Direct Booker, Bornholmske — a portfolio of small, country-specific deals</div>
+      <div class="riskgauge"><span class="rl">Risk</span><div class="riskbar"><i class="on med"></i><i class="on med"></i><i></i></div><span class="risktxt med">Medium</span></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Too many small, country-specific deals — integration work and management bandwidth spread thin, no brand recognized at scale.</p>
+      <div class="movechips">
+        <span class="movechip active" data-note="The acquired brands currently run on separate operating and tech stacks rather than one shared platform.">Shared operating platform</span>
+        <span class="movechip" data-note="2–3 European markets scaled deeper, rather than more small bolt-ons, is one way to concentrate management attention.">2–3 focus markets</span>
+        <span class="movechip" data-note="Some of the smaller deals (Direct Booker, Bornholmske-scale) may not be pulling their weight relative to the integration cost.">Portfolio tail review</span>
+        <span class="movechip" data-note="The vacation-rental business currently runs as a patchwork of names rather than one clear identity, building on ‘Sunday’ in the UK.">One clear brand identity</span>
+        <span class="movechip" data-note="An EU-domiciled entity operating under EU-level regulatory passporting is an alternative to managing France/Germany/Denmark-level compliance separately for each brand.">EU-domiciled brand entity</span>
+      </div>
+      <div class="mvpanel active">The acquired brands currently run on separate operating and tech stacks rather than one shared platform.</div>
+      <div class="mvhint">Tap a chip to see why it matters</div>
+
+      <div class="insight" style="margin-top:20px">
+        <span class="tag">Segment to explore — an EU-domiciled entity</span>
+        Today each country carries its own compliance overhead. One alternative: a single EU-domiciled entity under EU-level passporting, so one framework governs the whole footprint instead of separate country-by-country compliance per brand.
+      </div>
+    </div>
+
+    <div class="bkt-panel" id="bp-row">
+      <h3>Rest of World — the biggest slice, the least defined</h3>
+      <div class="bsub">~33% of revenue — currently a residual number, not a reported market</div>
+      <div class="riskgauge"><span class="rl">Risk</span><div class="riskbar"><i class="on med"></i><i class="on med"></i><i></i></div><span class="risktxt med">Medium</span></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">The largest revenue bucket of the four has zero visibility — hard to read strategy into what isn’t disclosed.</p>
+      <div class="movechips">
+        <span class="movechip active" data-note="This bucket isn’t currently reported by market, which limits what can be said about it.">Market-level reporting</span>
+        <span class="movechip" data-note="A single large debt-funded acquisition here would repeat the concentration pattern already visible in the US bucket.">US-style mega-deal risk</span>
+        <span class="movechip" data-note="Many small country-specific deals here would repeat the fragmentation pattern already visible in the Europe bucket.">Europe-style scatter risk</span>
+        <span class="movechip" data-note="1–2 mid-sized, asset-light franchise or management deals in Southeast Asia or the Middle East is a scale point between the two extremes above.">Mid-sized SEA/ME deals</span>
+        <span class="movechip" data-note="An anchor acquisition or franchise replication of the US/India playbook, in a single RoW market, is one way to convert this bucket into a second reported growth engine.">Anchor acquisition pattern</span>
+      </div>
+      <div class="mvpanel active">This bucket isn’t currently reported by market, which limits what can be said about it.</div>
+      <div class="mvhint">Tap a chip to see why it matters</div>
+
+      <div class="insight" style="margin-top:20px">
+        <span class="tag">Segment to explore — an anchor acquisition, replicated</span>
+        Rest of World today looks like the US did before Motel 6 — the biggest bucket, least defined. One path: a single anchor deal, likely in SEA or the Middle East where footprint already exists, to turn a residual line into a second reported engine.
+      </div>
+    </div>
+
+    <h2 class="sec">Segments worth exploring — not region-specific</h2>
+    <p class="sub">Ideas that could apply across footprints rather than being locked to one bucket</p>
+    <div class="insight">
+      <span class="tag">Branded residences vs. managed-living — two different markets</span>
+      <b>Branded residences</b> (Four Seasons / Ritz-style licensing on homes) is a real $30B+ global category — but it’s ultra-luxury, where the brand name carries the premium. A structural mismatch for a budget/mid-market brand.
+      <br><br>
+      <b>Managed-living / facility management</b> — housekeeping, concierge, security and property ops for premium societies — is a closer fit: a B2B services model near what OYO already runs. And it’s not greenfield — Studio 6 and Sunday Residences already give PRISM an extended-stay foothold. The question is whether it’s scaled as a deliberate B2B line, or left as a by-product.
+    </div>
+
+    <div class="insight">
+      <span class="tag">The one thread connecting all four</span>
+      Each bucket has its own fix, but they all draw on the same capital and the same management attention — so this only works as a sequence, not four parallel efforts. <b>Group growth past its current ceiling likely hinges on reducing dependence on one acquisition for the scale story.</b>
+    </div>
+    <h2 class="sec">The questions leadership should be sitting with</h2>
+    <p class="sub">Zooming out from the four engines to the group level — tap a question to see why it matters</p>
+    <div class="movechips">
+      <span class="movechip active" data-note="Scale is a distribution stat, not a reputation. As Sunday premiumises, does PRISM need an emotional signature the way Taj has heritage — or is access-at-scale the whole answer?">Identity</span>
+      <span class="movechip" data-note="Asset-light is becoming the industry default — Lemon Tree spun out Fleur in Jan 2026 to chase it. Copying the playbook stops differentiating; the edge may come from selectively owning a premium/experiential layer pure franchising can’t replicate.">Asset-light mix</span>
+      <span class="movechip" data-note="Eleven-plus businesses across hotels, homes, listings, weddings and workspaces. Do they compound into one platform, or dilute focus and management bandwidth?">Portfolio coherence</span>
+      <span class="movechip" data-note="Largest footprint, ~16% of group revenue. Can company-operated conversion (1,573, +49%) turn scale into revenue share before overseas cash flow is needed elsewhere?">India monetisation</span>
+      <span class="movechip" data-note="Motel 6 is ~27% of revenue and the majority of group GBV. How long should the profit story lean on a single acquired brand with no second US pillar?">US concentration</span>
+      <span class="movechip" data-note="AI partner tools and a data platform already run internally. Do they stay operating tools, or become the standalone hospitality-OS revenue stream the Listings vertical already hints at?">Tech as product</span>
+    </div>
+    <div class="mvpanel active">Scale is a distribution stat, not a reputation. As Sunday premiumises, does PRISM need an emotional signature the way Taj has heritage — or is access-at-scale the whole answer?</div>
+    <div class="mvhint">Six group-level questions — each built to survive a “why do you believe that?”</div>
+
+    <div class="insight">
+      <span class="tag">A thread worth pulling — two of these may share one answer</span>
+      Identity and asset-light point the same way: a thin owned layer of premium, experiential flagships — most naturally under <b>Sunday</b> — could both create the emotional signature PRISM lacks and hold the ground asset-light convergence is erasing. A hypothesis leadership can test, not a recommendation.
+    </div>
+  </section>
+
+  <!-- ============ BEYOND THE DASHBOARD ============ -->
+  <section class="view" id="why">
+    <div class="hero">
+      <div class="num">Beyond the<br>dashboard</div>
+      <div class="cap"><div class="lab">What building this taught me — and how I’d think inside a company like PRISM.</div>
+        <div class="sub">Less about the company, more about how I approach a problem like it.</div></div>
+    </div>
+
+    <div class="insight">
+      <span class="tag">What this project actually taught me</span>
+      I set out to study a company and ended up studying how businesses evolve. The surprise wasn’t what PRISM was <i>missing</i> — it was how many of my “new ideas” it had already started. The harder question is rarely which business to invent next, but which existing ones deserve focus and scale.
+    </div>
+
+    <h2 class="sec">One question stayed with me</h2>
+    <p class="sub">Every iconic hospitality brand is remembered for something beyond a room — tap one</p>
+    <div class="movechips">
+      <span class="movechip active" data-note="Taj — heritage and timeless Indian luxury; the building itself is the brand.">Taj</span>
+      <span class="movechip" data-note="Marriott — one of the world’s strongest loyalty ecosystems (Bonvoy); a Marriott behaves like a Marriott anywhere.">Marriott</span>
+      <span class="movechip" data-note="Airbnb — turned accommodation into a feeling: belong anywhere.">Airbnb</span>
+      <span class="movechip" data-note="Aman — synonymous with ultra-luxury and exclusivity; a handful of unforgettable places.">Aman</span>
+    </div>
+    <div class="mvpanel active">Taj — heritage and timeless Indian luxury; the building itself is the brand.</div>
+    <div class="mvhint">Tap a brand — then ask the same of PRISM</div>
+
+    <div class="stakes-box">
+      <span class="stag">The question I kept coming back to</span>
+      <p>PRISM is remembered for access and price — real, but functional. None of the brands above still have to ask what they’re known for. PRISM does: <b>what emotional memory will a guest associate with it ten years from now?</b></p>
+    </div>
+
+    <h2 class="sec">Exploring ideas — not prescribing strategy</h2>
+    <p class="sub">Tap any — none are recommendations, just attempts at one idea: turning a one-off stay into a relationship that lasts.</p>
+    <div class="movechips">
+      <span class="movechip active" data-note="A loyalty ecosystem that rewards the relationship, not a single booking — value that outlives one stay.">Loyalty ecosystem</span>
+      <span class="movechip" data-note="A co-branded travel card, like Marriott’s Bonvoy — everyday spend earns coins that only unlock across PRISM stays, turning one-off guests into a repeat ecosystem.">Co-branded card</span>
+      <span class="movechip" data-note="A distillery or craft-beverage collaboration — a premium tasting experience that gives Sunday guests something to remember, and reaches a different premium audience.">Distillery collaboration</span>
+      <span class="movechip" data-note="Tea estates, coffee roasters and local artisans — origin-led experiences that root a stay in its place.">Artisan and roastery collabs</span>
+    </div>
+    <div class="mvpanel active">A loyalty ecosystem that rewards the relationship, not a single booking — value that outlives one stay.</div>
+    <div class="mvhint">The point isn’t any single idea — it’s that a stay shouldn’t end at checkout</div>
+
+    <h2 class="sec">Where I think AI fits</h2>
+    <p class="sub">My one principle: AI should make hospitality <i>more</i> human, not replace it</p>
+    <div class="mirrorrow">
+      <div class="mirrorcard">
+        <div class="mn">AI, behind the scenes</div>
+        <div class="mv">Pricing, forecasting, revenue management, the repetitive operational load — where speed and consistency pay off.</div>
+      </div>
+      <div class="mirrorvs">so that</div>
+      <div class="mirrorcard">
+        <div class="mn">People, up front</div>
+        <div class="mv">The welcome, the recommendation, the empathy when something goes wrong — the moments tech alone can’t create.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:22px">
+      <span class="tag">The kind of PM this points to</span>
+      A program manager’s value isn’t the loudest idea — it’s asking better questions, connecting what others leave disconnected, and simplifying complexity until a team can act. That’s the mindset behind every tab here.
+    </div>
+
+    <div class="stakes-box">
+      <span class="stag">Why not PRISM?</span>
+      <p>Musafir Café is a much-loved Hindi novel — now a Netflix series — a story people feel they’ve lived. A <i>musafir</i>, a traveller, is exactly who PRISM hosts every night. So why couldn’t it have its own — a real café that carries a story people seek out, not just a place they pass through? That’s what pulls me: building things people remember, where the experience and the story outlast the stay. <b>Great strategy isn’t about having all the answers — it’s about asking the questions that help everyone find them.</b></p>
+    </div>
+
+    <p style="margin-top:24px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted2);font-style:italic;line-height:1.7;text-align:right">
+      — Sneh Ankit
+    </p>
+  </section>
+
+  <div class="foot">
+    <b>Sources:</b> <a href="https://www.business-standard.com/companies/news/oyo-posts-pat-of-623-cr-in-fy25-becomes-top-startup-ritesh-agarwal-125050800869_1.html">Business Standard</a> ·
+    <a href="https://entrackr.com/fintrackr/oyo-parent-prism-posts-rs-6941-cr-revenue-and-rs-748-cr-profit-in-9m-fy26-12119871">entrackr</a> ·
+    <a href="https://www.outlookmoney.com/invest/oyo-ipo-parent-prism-files-updated-drhp-with-sebi">Outlook Money</a> ·
+    <a href="https://groww.in/blog/oyo-parent-prism-files-updated-drhp-for-6650-crore-ipo-with-sebi">Groww — Updated DRHP filing</a> ·
+    <a href="https://www.venturasecurities.com/blog/oyo-ipo-update-2026-latest-news-ipo-size-valuation-drhp-and-listing-timeline/">Ventura Securities — IPO timeline</a> ·
+    <a href="https://www.unlistedkraft.in/blog/oyo-ipo-prism-confidential-drhp">Unlisted Kraft — confidential DRHP &amp; bonus issue</a> ·
+    <a href="https://www.business-standard.com/companies/news/oyo-completes-us-based-g6-hospitality-acquisition-for-525-million-124122400424_1.html">Business Standard — G6 deal</a> ·
+    <a href="https://www.hotelmanagement.net/transactions/new-acquisition-oyo-gains-ground-europe">Hotel Management — @Leisure deal</a> ·
+    <a href="https://travelnolimit.com/2024/08/02/list-of-top-15-brand-hotel-chains-in-india/">Travel Nolimit — IHCL/Marriott scale</a> ·
+    <a href="https://en.wikipedia.org/wiki/Lemon_Tree_Hotels">Wikipedia — Lemon Tree Hotels</a> ·
+    <a href="https://warburgpincus.com/2026/01/09/lemon-tree-hotels-announces-strategic-reorganization-and-investment-from-warburg-pincus-in-fleur-hotels-to-unlock-long-term-shareholder-value/">Warburg Pincus — Lemon Tree/Fleur restructuring</a> ·
+    <a href="https://www.marknteladvisors.com/research-library/india-hospitality-market-report.html">MarkNtel Advisors</a> ·
+    <a href="https://sacra.com/c/oyo-rooms/">Sacra — valuation history</a>
+    <br>Figures as of Aug 2026, illustrative of public record — verify against the latest DRHP before quoting exact numbers.
+  </div>
+</div>
+
+<script>
+  document.getElementById('today').textContent =
+    new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  const tabs=document.querySelectorAll('.tab'),views=document.querySelectorAll('.view');
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('active'));views.forEach(v=>v.classList.remove('active'));
+    t.classList.add('active');document.getElementById(t.dataset.v).classList.add('active');
+  }));
+  const bkts=document.querySelectorAll('.bkt'),bpanels=document.querySelectorAll('.bkt-panel');
+  bkts.forEach(b=>b.addEventListener('click',()=>{
+    const wasActive=b.classList.contains('active');
+    bkts.forEach(x=>x.classList.remove('active'));bpanels.forEach(p=>p.classList.remove('active'));
+    if(!wasActive){b.classList.add('active');document.getElementById(b.dataset.bkt).classList.add('active');}
+  }));
+  const fcards=document.querySelectorAll('.fcard'),fpanels=document.querySelectorAll('.fpanel');
+  fcards.forEach(f=>f.addEventListener('click',()=>{
+    fcards.forEach(x=>x.classList.remove('active'));fpanels.forEach(p=>p.classList.remove('active'));
+    f.classList.add('active');document.getElementById(f.dataset.force).classList.add('active');
+  }));
+  document.querySelectorAll('.movechips').forEach(group=>{
+    const panel=group.nextElementSibling;
+    group.querySelectorAll('.movechip').forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        group.querySelectorAll('.movechip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+        panel.textContent=chip.dataset.note;
+        panel.classList.add('active');
+      });
+    });
+  });
+</script>
+</body>
+</html>
