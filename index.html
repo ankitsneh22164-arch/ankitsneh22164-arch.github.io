@@ -104,7 +104,7 @@
     letter-spacing:0.16em;
     text-transform:uppercase;
     color:var(--gold-dim);
-    margin:64px 0 28px;
+    margin:64px 0 12px;
     display:flex;
     align-items:center;
     gap:16px;
@@ -114,6 +114,22 @@
     flex:1;
     height:1px;
     background:var(--rule);
+  }
+  .section-subtext{
+    font-size:15px;
+    color:var(--paper-dim);
+    max-width:64ch;
+    margin:0 0 8px;
+  }
+  .section-disclaimer{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-style:italic;
+    color:var(--paper-dim);
+    opacity:0.75;
+    max-width:64ch;
+    margin:0 0 28px;
+    line-height:1.6;
   }
 
   /* ---- Case files ---- */
@@ -216,7 +232,7 @@
   <header>
     <p class="eyebrow">Strategy · Analysis · Independent Work</p>
     <h1>Sneh Ankit<br><em>Strategic Intelligence Briefs</em></h1>
-    <p class="lede">A working record of self-built analytical tools and strategic briefings — market intelligence dashboards and company-specific strategy work, built and maintained independently alongside consulting delivery at Deloitte.</p>
+    <p class="lede">Most strategy work stops at the deck. Mine doesn't. I find the place where a business is quietly losing ground — a channel that's maxed out, a model that doesn't scale, a gap nobody's named yet — and I build the fix, not just the framework. Everything below started as a problem I couldn't leave alone.</p>
     <div class="meta-row">
       <span>Delhi NCR</span>
       <a href="https://www.linkedin.com/in/snehankit3/" target="_blank" rel="noopener">LinkedIn</a>
@@ -225,7 +241,8 @@
     </div>
   </header>
 
-  <p class="section-label">Case Files</p>
+  <p class="section-label">Live Dashboards</p>
+  <p class="section-subtext">Ongoing analytical tools — built, maintained, and updated over time.</p>
 
   <div class="case">
     <div class="case-num">01</div>
@@ -257,8 +274,12 @@
     </div>
   </div>
 
+  <p class="section-label">Strategy Case Studies</p>
+  <p class="section-subtext">Single-company strategic briefings — market position, growth levers, and open questions, worked through end to end.</p>
+  <p class="section-disclaimer">Each briefing below is either a self-initiated analysis or a generalized, anonymized version of advisory work — reworked so no client-identifying detail remains.</p>
+
   <div class="case">
-    <div class="case-num">03</div>
+    <div class="case-num">01</div>
     <div>
       <p class="case-kicker">Company Strategy Briefing</p>
       <h2 class="case-title">The Prism Ledger — OYO Strategic Briefing</h2>
@@ -269,6 +290,22 @@
         <span class="tag">IPO Analysis</span>
       </div>
       <a class="case-link" href="projects/prism-ledger/" target="_blank" rel="noopener">View live briefing →</a>
+    </div>
+  </div>
+
+  <div class="case">
+    <div class="case-num">02</div>
+    <div>
+      <p class="case-kicker">Company Strategy Briefing</p>
+      <h2 class="case-title">Creator-to-Company Growth Strategy</h2>
+      <p class="case-desc">A strategy case study on a content-creator-led company expanding into a structured, paid learning platform — mapping the gap between audience reach and product trust, and prioritizing three growth initiatives over ten.</p>
+      <div class="case-tags">
+        <span class="tag">Growth Strategy</span>
+        <span class="tag">Market Positioning</span>
+        <span class="tag">Go-to-Market</span>
+      </div>
+      <!-- Replace # with your Speaker Deck link once published -->
+      <a class="case-link" href="#" target="_blank" rel="noopener">View briefing →</a>
     </div>
   </div>
 
